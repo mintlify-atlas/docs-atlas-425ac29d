@@ -1,0 +1,258 @@
+---
+title: 'Setup Guide'
+description: 'Complete setup guide for the Legacy Migration Task Manager'
+---
+
+## Prerequisites
+
+Before setting up the Legacy Migration Task Manager, ensure you have the following installed:
+
+<Steps>
+  <Step title="Install .NET 10 SDK">
+    Download and install the .NET 10 SDK from the [official Microsoft website](https://dotnet.microsoft.com/download).
+    
+    Verify installation:
+    ```bash
+    dotnet --version
+    ```
+  </Step>
+
+  <Step title="Install Node.js 22">
+    Download and install Node.js 22 (LTS) from [nodejs.org](https://nodejs.org/).
+    
+    Verify installation:
+    ```bash
+    node --version
+    npm --version
+    ```
+  </Step>
+
+  <Step title="Setup PostgreSQL Database">
+    Install PostgreSQL (version 12 or higher) on your system or use a cloud-hosted PostgreSQL instance.
+    
+    Create a new database:
+    ```sql
+    CREATE DATABASE project_template_scharp;
+    ```
+  </Step>
+</Steps>
+
+## Database Setup
+
+### Connection String Format
+
+The application uses PostgreSQL with Npgsql. Configure your database connection using one of these methods:
+
+<CodeGroup>
+```bash Environment Variable
+# PostgreSQL connection string format
+export DATABASE_URL="Host=localhost;Database=project_template_scharp;Username=postgres;Password=yourpassword"
+```
+
+```json appsettings.json
+{
+  "ConnectionStrings": {
+    "ProjectTemplateConnection": "Host=localhost;Database=project_template_scharp;Username=postgres;Password=yourpassword"
+  }
+}
+```
+</CodeGroup>
+
+<Info>
+The application checks for the connection string in this order:
+1. `ConnectionStrings:ProjectTemplateConnection` in appsettings.json
+2. `DATABASE_URL` configuration value
+3. `DATABASE_URL` environment variable
+</Info>
+
+### Connection Configuration
+
+The application is configured with the following database settings in `Program.cs:36-43`:
+
+- **Retry on Failure**: Up to 3 retries with 10-second delay
+- **Command Timeout**: 30 seconds
+- **Provider**: Npgsql for PostgreSQL
+
+### Apply Migrations
+
+If Entity Framework migrations are available, apply them to create the database schema:
+
+```bash
+cd backend
+dotnet ef database update
+```
+
+## Environment Variables
+
+Create a `.env` file or set the following environment variables:
+
+### Required Variables
+
+<CodeGroup>
+```bash Development
+# Database Connection
+DATABASE_URL="Host=localhost;Database=project_template_scharp;Username=postgres;Password=yourpassword"
+
+# JWT Configuration
+JWT_KEY="YourSecureJwtSecretKeyHere_MinimumLength32Characters!"
+JWT_ISSUER="TemplateAPI"
+JWT_AUDIENCE="TemplateAPI"
+
+# ASP.NET Core
+ASPNETCORE_ENVIRONMENT="Development"
+ASPNETCORE_URLS="http://localhost:5000"
+```
+
+```bash Production
+# Database Connection
+DATABASE_URL="Host=your-db-host;Database=project_template_scharp;Username=your-user;Password=your-secure-password;SslMode=Require"
+
+# JWT Configuration
+JWT_KEY="YourProductionSecureJwtSecretKey_ShouldBeLongAndRandom!"
+JWT_ISSUER="TemplateAPI"
+JWT_AUDIENCE="TemplateAPI"
+
+# ASP.NET Core
+ASPNETCORE_ENVIRONMENT="Production"
+ASPNETCORE_URLS="http://+:8080"
+```
+</CodeGroup>
+
+<Warning>
+**Security Best Practices:**
+- Never commit the `.env` file to version control
+- Use strong, randomly generated JWT keys in production
+- Use SSL/TLS for database connections in production (`SslMode=Require`)
+- The default JWT key is for development only: `DefaultJwtSecretKeyForDevelopmentPurposesOnly2024!`
+</Warning>
+
+## Running Locally
+
+### Backend Setup
+
+<Steps>
+  <Step title="Navigate to Backend Directory">
+    ```bash
+    cd backend
+    ```
+  </Step>
+
+  <Step title="Restore Dependencies">
+    ```bash
+    dotnet restore
+    ```
+    
+    This installs all required packages:
+    - Microsoft.AspNetCore.Authentication.JwtBearer (10.0.2)
+    - Microsoft.AspNetCore.OpenApi (10.0.1)
+    - Npgsql.EntityFrameworkCore.PostgreSQL (10.0.0)
+    - System.IdentityModel.Tokens.Jwt (8.15.0)
+  </Step>
+
+  <Step title="Run the Backend">
+    <CodeGroup>
+    ```bash Standard Run
+    dotnet run
+    ```
+    
+    ```bash Watch Mode (Auto-reload)
+    dotnet watch run
+    ```
+    </CodeGroup>
+    
+    The API will be available at `https://localhost:7067` (or the URL specified in `ASPNETCORE_URLS`)
+  </Step>
+</Steps>
+
+### Frontend Setup
+
+<Steps>
+  <Step title="Navigate to Project Root">
+    ```bash
+    cd ..
+    ```
+  </Step>
+
+  <Step title="Install Dependencies">
+    ```bash
+    npm install
+    ```
+  </Step>
+
+  <Step title="Build Frontend">
+    ```bash
+    npm run build
+    ```
+    
+    This creates optimized frontend assets in `backend/wwwroot/`
+  </Step>
+</Steps>
+
+### Development with Visual Studio
+
+If you're using Visual Studio 2022:
+
+1. Open `Template_API.slnx` in Visual Studio
+2. Press `F5` or select **Debug > Start Debugging**
+3. The application will launch with both frontend and backend
+
+## Accessing the Application
+
+Once running locally, access:
+
+- **Application**: `https://localhost:7067`
+- **API Docs (Swagger)**: `https://localhost:7067/swagger/index.html` (Development only)
+- **OpenAPI Spec**: `https://localhost:7067/openapi/v1.json` (Development only)
+
+<Info>
+The application serves the React frontend at the root URL and API endpoints under `/api/*`. All unmatched routes fall back to `index.html` for client-side routing.
+</Info>
+
+## Troubleshooting
+
+### Cannot Connect to Database
+
+**Error**: `Database connection string is not configured`
+
+**Solution**: Ensure the `DATABASE_URL` environment variable is set or configured in `appsettings.json`
+
+```bash
+# Verify environment variable is set
+echo $DATABASE_URL  # Linux/Mac
+echo %DATABASE_URL%  # Windows CMD
+$env:DATABASE_URL   # Windows PowerShell
+```
+
+### JWT Key Not Configured
+
+**Error**: `JWT Key is not configured`
+
+**Solution**: Set the `JWT_KEY` environment variable or configure `Jwt:Key` in `appsettings.json`
+
+### CORS Issues
+
+If the frontend cannot connect to the API:
+
+- The application uses an `AllowFrontend` CORS policy (see `Program.cs:15-23`)
+- Currently configured to allow any origin in development
+- For production, restrict to specific origins in configuration
+
+### Port Already in Use
+
+If port 8080 or 7067 is already in use:
+
+```bash
+# Change the port using environment variable
+export ASPNETCORE_URLS="http://localhost:5001"
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="gear" href="/deployment/configuration">
+    Learn about all configuration options and environment variables
+  </Card>
+  <Card title="Docker Deployment" icon="docker" href="/deployment/docker">
+    Deploy using Docker containers
+  </Card>
+</CardGroup>

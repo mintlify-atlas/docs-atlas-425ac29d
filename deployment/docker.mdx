@@ -1,0 +1,555 @@
+---
+title: 'Docker Deployment'
+description: 'Deploy the Legacy Migration Task Manager using Docker and Railway'
+---
+
+## Overview
+
+The Legacy Migration Task Manager uses a multi-stage Docker build to create an optimized production image. The Dockerfile builds both the frontend and backend, then creates a minimal runtime image.
+
+## Dockerfile Explanation
+
+The application uses a three-stage Docker build process defined in the Dockerfile at the project root.
+
+### Stage 1: Frontend Build
+
+```dockerfile
+FROM node:22 AS frontend-build
+WORKDIR /app
+COPY package*.json ./
+COPY webpack.config.js ./
+COPY tailwind.config.js ./
+COPY postcss.config.js ./
+COPY src ./src
+RUN npm install
+RUN npm run build
+```
+
+**Purpose**: Builds the React frontend using Node.js 22
+
+<Steps>
+  <Step title="Base Image">
+    Uses `node:22` as the base image for compatibility with modern JavaScript features
+  </Step>
+
+  <Step title="Copy Configuration">
+    Copies all build configuration files:
+    - `package.json` and `package-lock.json` for dependencies
+    - `webpack.config.js` for bundling configuration
+    - `tailwind.config.js` for Tailwind CSS 4 setup
+    - `postcss.config.js` for CSS processing
+  </Step>
+
+  <Step title="Install and Build">
+    - Runs `npm install` to install dependencies
+    - Runs `npm run build` to create optimized production assets
+    - Output is generated in `backend/wwwroot/`
+  </Step>
+</Steps>
+
+### Stage 2: Backend Build
+
+```dockerfile
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS backend-build
+WORKDIR /app
+COPY backend ./
+RUN dotnet publish -c Release -o out
+```
+
+**Purpose**: Compiles the .NET 10 backend application
+
+<Steps>
+  <Step title="SDK Image">
+    Uses `mcr.microsoft.com/dotnet/sdk:10.0` which includes the full .NET 10 SDK for building
+  </Step>
+
+  <Step title="Copy Backend Code">
+    Copies the entire `backend/` directory containing:
+    - Controllers
+    - Models and DbContext
+    - Services and Interfaces
+    - `Template_API.csproj`
+    - `Program.cs`
+  </Step>
+
+  <Step title="Publish Release Build">
+    Runs `dotnet publish -c Release -o out` to:
+    - Compile the application in Release mode
+    - Optimize for production
+    - Output self-contained binaries to the `out` directory
+  </Step>
+</Steps>
+
+### Stage 3: Runtime Image
+
+```dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
+WORKDIR /app
+COPY --from=backend-build /app/out .
+COPY --from=frontend-build /app/backend/wwwroot ./wwwroot
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+ENTRYPOINT ["dotnet", "Template_API.dll"]
+```
+
+**Purpose**: Creates the minimal runtime image for production
+
+<Steps>
+  <Step title="Runtime Image">
+    Uses `mcr.microsoft.com/dotnet/aspnet:10.0` - a smaller image with only the ASP.NET Core runtime (no SDK)
+  </Step>
+
+  <Step title="Copy Built Artifacts">
+    - Copies compiled backend from `backend-build` stage
+    - Copies built frontend assets from `frontend-build` stage to `wwwroot/`
+  </Step>
+
+  <Step title="Configure Runtime">
+    - Exposes port 8080 for HTTP traffic
+    - Sets `ASPNETCORE_URLS` to listen on all interfaces
+    - Configures entry point to run `Template_API.dll`
+  </Step>
+</Steps>
+
+<Info>
+**Image Size Optimization:**
+The multi-stage build significantly reduces the final image size by:
+- Excluding Node.js and npm from the final image
+- Excluding the .NET SDK (only runtime is needed)
+- Only including compiled binaries and static assets
+</Info>
+
+## Building the Docker Image
+
+### Local Build
+
+Build the Docker image locally:
+
+<CodeGroup>
+```bash Basic Build
+docker build -t legacy-task-manager .
+```
+
+```bash Build with Tag
+docker build -t legacy-task-manager:v1.0.0 .
+```
+
+```bash Build with Build Args
+docker build \
+  --build-arg ASPNETCORE_ENVIRONMENT=Production \
+  -t legacy-task-manager .
+```
+</CodeGroup>
+
+### Build Process
+
+The build process will:
+
+1. Download the Node.js 22 base image
+2. Install npm dependencies and build the frontend (~2-5 minutes)
+3. Download the .NET 10 SDK image
+4. Restore NuGet packages and compile the backend (~1-3 minutes)
+5. Create the final runtime image (~30 seconds)
+
+<Warning>
+**Build Time:**
+The first build may take 5-10 minutes depending on your internet connection and system performance. Subsequent builds will be faster due to Docker layer caching.
+</Warning>
+
+## Running Docker Containers
+
+### Basic Run
+
+Run the container with basic configuration:
+
+```bash
+docker run -d \
+  --name task-manager \
+  -p 8080:8080 \
+  -e DATABASE_URL="Host=host.docker.internal;Database=project_template_scharp;Username=postgres;Password=yourpassword" \
+  -e JWT_KEY="YourSecureJwtSecretKey" \
+  legacy-task-manager
+```
+
+### Production Run with All Variables
+
+Run with complete production configuration:
+
+```bash
+docker run -d \
+  --name task-manager \
+  -p 8080:8080 \
+  -e DATABASE_URL="Host=prod-db.example.com;Database=project_template_scharp;Username=prod_user;Password=secure_password;SslMode=Require" \
+  -e JWT_KEY="ProductionSecureRandomJwtKey_ChangeThis!" \
+  -e JWT_ISSUER="TemplateAPI" \
+  -e JWT_AUDIENCE="TemplateAPI" \
+  -e ASPNETCORE_ENVIRONMENT="Production" \
+  --restart unless-stopped \
+  legacy-task-manager
+```
+
+### Using Environment File
+
+Create a `.env` file:
+
+```bash .env
+DATABASE_URL=Host=prod-db.example.com;Database=project_template_scharp;Username=prod_user;Password=secure_password;SslMode=Require
+JWT_KEY=ProductionSecureRandomJwtKey_ChangeThis!
+JWT_ISSUER=TemplateAPI
+JWT_AUDIENCE=TemplateAPI
+ASPNETCORE_ENVIRONMENT=Production
+```
+
+Run with the environment file:
+
+```bash
+docker run -d \
+  --name task-manager \
+  -p 8080:8080 \
+  --env-file .env \
+  --restart unless-stopped \
+  legacy-task-manager
+```
+
+<Warning>
+**Security:**
+- Never commit `.env` files to version control
+- Use Docker secrets or secret management services in production
+- Restrict access to environment files with proper file permissions (`chmod 600 .env`)
+</Warning>
+
+## Docker Compose
+
+For local development with PostgreSQL, use Docker Compose:
+
+### docker-compose.yml
+
+```yaml
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: task-manager-db
+    environment:
+      POSTGRES_DB: project_template_scharp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: devpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: task-manager-app
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: "Host=postgres;Database=project_template_scharp;Username=postgres;Password=devpassword"
+      JWT_KEY: "DevJwtSecretKeyForLocalDevelopmentOnly2024!"
+      JWT_ISSUER: "TemplateAPI"
+      JWT_AUDIENCE: "TemplateAPI"
+      ASPNETCORE_ENVIRONMENT: "Development"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+```
+
+### Running with Docker Compose
+
+<CodeGroup>
+```bash Start Services
+docker-compose up -d
+```
+
+```bash View Logs
+docker-compose logs -f
+```
+
+```bash Stop Services
+docker-compose down
+```
+
+```bash Rebuild and Start
+docker-compose up -d --build
+```
+
+```bash Stop and Remove Volumes
+docker-compose down -v
+```
+</CodeGroup>
+
+## Railway Deployment
+
+Railway is the recommended platform for deploying the Legacy Migration Task Manager.
+
+### Prerequisites
+
+<Steps>
+  <Step title="Create Railway Account">
+    Sign up at [railway.app](https://railway.app) using GitHub authentication
+  </Step>
+
+  <Step title="Install Railway CLI (Optional)">
+    ```bash
+    npm install -g @railway/cli
+    railway login
+    ```
+  </Step>
+
+  <Step title="Prepare Your Repository">
+    Ensure your code is pushed to a GitHub repository with the Dockerfile at the root
+  </Step>
+</Steps>
+
+### Deployment Steps
+
+<Steps>
+  <Step title="Create New Project">
+    1. Go to [railway.app](https://railway.app)
+    2. Click "New Project"
+    3. Select "Deploy from GitHub repo"
+    4. Choose your repository
+  </Step>
+
+  <Step title="Add PostgreSQL Database">
+    1. Click "New" in your project
+    2. Select "Database"
+    3. Choose "PostgreSQL"
+    4. Railway will automatically create a `DATABASE_URL` variable
+  </Step>
+
+  <Step title="Configure Environment Variables">
+    In the application service settings, add:
+    
+    ```bash
+    JWT_KEY=YourSecureProductionJwtKey_MakeThisLongAndRandom!
+    JWT_ISSUER=TemplateAPI
+    JWT_AUDIENCE=TemplateAPI
+    ASPNETCORE_ENVIRONMENT=Production
+    ```
+    
+    <Info>
+    `DATABASE_URL` is automatically created and linked when you add PostgreSQL
+    </Info>
+  </Step>
+
+  <Step title="Deploy">
+    Railway automatically:
+    - Detects the Dockerfile
+    - Builds the Docker image
+    - Deploys the container
+    - Assigns a public URL
+    
+    The application will be available at `https://your-app.railway.app`
+  </Step>
+</Steps>
+
+### Railway Configuration
+
+#### Using railway.json (Optional)
+
+Create a `railway.json` file in your project root:
+
+```json
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "Dockerfile"
+  },
+  "deploy": {
+    "startCommand": "dotnet Template_API.dll",
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  }
+}
+```
+
+#### Port Configuration
+
+Railway automatically handles port configuration, but the application must listen on the port specified by `PORT` environment variable or use `ASPNETCORE_URLS=http://+:8080` (already configured in the Dockerfile).
+
+### Railway CLI Deployment
+
+<CodeGroup>
+```bash Initialize and Deploy
+railway init
+railway up
+```
+
+```bash Link to Existing Project
+railway link
+railway up
+```
+
+```bash View Logs
+railway logs
+```
+
+```bash Open in Browser
+railway open
+```
+</CodeGroup>
+
+## Container Management
+
+### Useful Docker Commands
+
+<CodeGroup>
+```bash View Running Containers
+docker ps
+```
+
+```bash View Container Logs
+docker logs task-manager -f
+```
+
+```bash Stop Container
+docker stop task-manager
+```
+
+```bash Restart Container
+docker restart task-manager
+```
+
+```bash Remove Container
+docker rm task-manager
+```
+
+```bash Execute Command in Container
+docker exec -it task-manager /bin/bash
+```
+
+```bash View Container Stats
+docker stats task-manager
+```
+</CodeGroup>
+
+### Health Checks
+
+Add a health check to your Dockerfile:
+
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8080/api/health || exit 1
+```
+
+<Info>
+You'll need to implement a health check endpoint in your API if not already available.
+</Info>
+
+## Troubleshooting
+
+### Build Failures
+
+**Issue**: Frontend build fails
+
+```bash
+# Check Node.js version in Dockerfile
+FROM node:22 AS frontend-build
+
+# Verify package.json and webpack.config.js are copied
+```
+
+**Issue**: Backend build fails
+
+```bash
+# Check .NET version
+docker run mcr.microsoft.com/dotnet/sdk:10.0 dotnet --version
+
+# Verify all backend files are copied
+```
+
+### Runtime Errors
+
+**Issue**: Container starts but application fails
+
+```bash
+# Check logs
+docker logs task-manager
+
+# Common issues:
+# - DATABASE_URL not set
+# - JWT_KEY not configured
+# - Database not accessible from container
+```
+
+**Issue**: Cannot connect to database
+
+```bash
+# For host database, use host.docker.internal (Docker Desktop)
+DATABASE_URL="Host=host.docker.internal;Database=..."
+
+# For Docker network, use service name
+DATABASE_URL="Host=postgres;Database=..."
+
+# Check network connectivity
+docker exec -it task-manager ping postgres
+```
+
+### Port Conflicts
+
+**Issue**: Port 8080 already in use
+
+```bash
+# Map to different host port
+docker run -p 9090:8080 legacy-task-manager
+
+# Or find and stop the conflicting process
+lsof -i :8080  # Mac/Linux
+netstat -ano | findstr :8080  # Windows
+```
+
+## Best Practices
+
+<Steps>
+  <Step title="Use Multi-Stage Builds">
+    The Dockerfile already uses multi-stage builds to minimize image size. Don't modify this pattern.
+  </Step>
+
+  <Step title="Layer Caching">
+    Copy dependency files (`package.json`, `.csproj`) before source code to leverage Docker layer caching:
+    ```dockerfile
+    COPY package*.json ./
+    RUN npm install
+    COPY src ./src
+    ```
+  </Step>
+
+  <Step title="Environment Variables">
+    Never hardcode secrets in the Dockerfile. Always use environment variables passed at runtime.
+  </Step>
+
+  <Step title="Health Checks">
+    Implement and configure health checks for production deployments.
+  </Step>
+
+  <Step title="Resource Limits">
+    Set memory and CPU limits in production:
+    ```bash
+    docker run -m 512m --cpus="1.0" legacy-task-manager
+    ```
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Setup Guide" icon="rocket" href="/deployment/setup">
+    Return to the setup guide for local development
+  </Card>
+  <Card title="Configuration" icon="gear" href="/deployment/configuration">
+    Learn about all configuration options
+  </Card>
+</CardGroup>

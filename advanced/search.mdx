@@ -1,0 +1,396 @@
+---
+title: 'Advanced Search'
+description: 'Search and filter tasks using multiple criteria and advanced filters'
+icon: 'magnifying-glass'
+---
+
+## Overview
+
+The search functionality allows you to find tasks quickly using multiple filters. Combine text search with state, priority, and project filters to narrow down results.
+
+<Info>
+  Search is performed client-side after fetching all tasks, allowing for instant filtering without additional API calls.
+</Info>
+
+---
+
+## Search Filters
+
+The search system supports four different filter types that can be combined:
+
+<CardGroup cols={2}>
+  <Card title="Text Search" icon="keyboard">
+    Search in task titles and descriptions
+  </Card>
+  <Card title="State Filter" icon="list-check">
+    Filter by workflow state
+  </Card>
+  <Card title="Priority Filter" icon="exclamation">
+    Filter by priority level
+  </Card>
+  <Card title="Project Filter" icon="folder">
+    Filter by project assignment
+  </Card>
+</CardGroup>
+
+---
+
+## How Search Works
+
+### Step 1: Load Filter Options
+
+The search interface loads available filter values from three endpoints:
+
+<CodeGroup>
+```javascript States
+const statesRes = await fetch('/api/tasks/states', {
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+// Response: { success: true, data: [{id: 1, name: "Pending"}, ...] }
+```
+
+```javascript Priorities
+const prioritiesRes = await fetch('/api/tasks/priorities', {
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+// Response: { success: true, data: [{id: 1, name: "High"}, ...] }
+```
+
+```javascript Projects
+const projectsRes = await fetch('/api/tasks/projects', {
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+// Response: { success: true, data: [{id: 1, name: "Migration"}, ...] }
+```
+</CodeGroup>
+
+### Step 2: Fetch All Tasks
+
+When the search is triggered, all active tasks are fetched:
+
+```javascript
+const response = await fetch('/api/tasks', {
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+```
+
+### Step 3: Apply Filters
+
+Filters are applied client-side in the following order:
+
+<Steps>
+  <Step title="Text Filter">
+    Search for matches in `title` and `description` fields (case-insensitive)
+    
+    ```javascript
+    if (searchText.trim()) {
+      const searchLower = searchText.toLowerCase();
+      filteredTasks = filteredTasks.filter(task =>
+        task.title?.toLowerCase().includes(searchLower) ||
+        task.description?.toLowerCase().includes(searchLower)
+      );
+    }
+    ```
+  </Step>
+  
+  <Step title="State Filter">
+    Match exact state ID
+    
+    ```javascript
+    if (selectedState) {
+      filteredTasks = filteredTasks.filter(task => 
+        task.stateId === parseInt(selectedState)
+      );
+    }
+    ```
+  </Step>
+  
+  <Step title="Priority Filter">
+    Match exact priority ID
+    
+    ```javascript
+    if (selectedPriority) {
+      filteredTasks = filteredTasks.filter(task => 
+        task.priorityId === parseInt(selectedPriority)
+      );
+    }
+    ```
+  </Step>
+  
+  <Step title="Project Filter">
+    Match exact project ID
+    
+    ```javascript
+    if (selectedProject) {
+      filteredTasks = filteredTasks.filter(task => 
+        task.projectId === parseInt(selectedProject)
+      );
+    }
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Search API Endpoints
+
+### GET /api/tasks/states
+
+Returns all active states for the filter dropdown.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "States retrieved successfully",
+  "data": [
+    { "id": 1, "name": "Pending" },
+    { "id": 2, "name": "In Progress" },
+    { "id": 3, "name": "Completed" },
+    { "id": 4, "name": "Closed" }
+  ]
+}
+```
+
+### GET /api/tasks/priorities
+
+Returns all active priorities for the filter dropdown.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Priorities retrieved successfully",
+  "data": [
+    { "id": 1, "name": "Low" },
+    { "id": 2, "name": "Medium" },
+    { "id": 3, "name": "High" }
+  ]
+}
+```
+
+### GET /api/tasks/projects
+
+Returns all active projects for the filter dropdown.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Projects retrieved successfully",
+  "data": [
+    { "id": 1, "name": "Legacy System Migration" },
+    { "id": 2, "name": "Mobile App Development" },
+    { "id": 3, "name": "Infrastructure Upgrade" }
+  ]
+}
+```
+
+### GET /api/tasks
+
+Returns all active tasks that will be filtered client-side.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Tasks retrieved successfully",
+  "data": [
+    {
+      "id": 1,
+      "title": "Update database schema",
+      "description": "Add new columns for user preferences",
+      "stateId": 2,
+      "stateName": "In Progress",
+      "priorityId": 3,
+      "priorityName": "High",
+      "projectId": 1,
+      "projectName": "Legacy System Migration",
+      "asignedId": 5,
+      "asignedName": "john.doe",
+      "expirationDate": "2026-03-15T00:00:00",
+      "estimatedHours": 8,
+      "creationDate": "2026-03-01T10:30:00",
+      "modificationDate": "2026-03-04T14:20:00"
+    }
+  ]
+}
+```
+
+---
+
+## Frontend Implementation
+
+### Search Component
+
+The SearchManager component (SearchManager.jsx:54-94) implements the search logic:
+
+```javascript
+const handleSearch = async () => {
+  setLoading(true);
+  setHasSearched(true);
+  try {
+    const response = await apiRequest('/tasks');
+    
+    if (response.success) {
+      let filteredTasks = response.data;
+
+      // Filter by text
+      if (searchText.trim()) {
+        const searchLower = searchText.toLowerCase();
+        filteredTasks = filteredTasks.filter(task =>
+          task.title?.toLowerCase().includes(searchLower) ||
+          task.description?.toLowerCase().includes(searchLower)
+        );
+      }
+
+      // Filter by state
+      if (selectedState) {
+        filteredTasks = filteredTasks.filter(task => 
+          task.stateId === parseInt(selectedState)
+        );
+      }
+
+      // Filter by priority
+      if (selectedPriority) {
+        filteredTasks = filteredTasks.filter(task => 
+          task.priorityId === parseInt(selectedPriority)
+        );
+      }
+
+      // Filter by project
+      if (selectedProject) {
+        filteredTasks = filteredTasks.filter(task => 
+          task.projectId === parseInt(selectedProject)
+        );
+      }
+
+      setTasks(filteredTasks);
+    }
+  } catch (error) {
+    console.error('Error searching tasks:', error);
+  } finally {
+    setLoading(false);
+  }
+};
+```
+
+### Enter Key Support
+
+The search input supports pressing Enter to trigger search:
+
+```javascript
+<input
+  type="text"
+  value={searchText}
+  onChange={(e) => setSearchText(e.target.value)}
+  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+  placeholder="Search in title or description..."
+/>
+```
+
+---
+
+## Search Results Display
+
+Results are displayed in a table format with visual indicators:
+
+### State Colors
+
+Tasks are color-coded based on their state:
+
+- **Pending** (StateId 1): Orange
+- **In Progress** (StateId 2): Blue
+- **Completed** (StateId 3): Green
+- **Other states**: Gray
+
+```javascript
+const getStateColor = (stateId) => {
+  const state = states.find(s => s.id === stateId);
+  if (!state) return 'bg-gray-50 hover:bg-gray-100';
+  
+  const nameUpper = state.name?.toUpperCase() || '';
+  if (nameUpper.includes('PENDING')) return 'bg-orange-50 hover:bg-orange-100';
+  if (nameUpper.includes('IN PROGRESS')) return 'bg-blue-50 hover:bg-blue-100';
+  if (nameUpper.includes('COMPLETED')) return 'bg-green-50 hover:bg-green-100';
+  return 'bg-gray-50 hover:bg-gray-100';
+};
+```
+
+### Priority Colors
+
+Priorities are displayed with badges:
+
+- **High**: Red badge
+- **Medium**: Amber badge
+- **Low**: Green badge
+
+```javascript
+const getPriorityColor = (priorityId) => {
+  const priority = priorities.find(p => p.id === priorityId);
+  if (!priority) return 'bg-red-50 text-red-700 border-red-200';
+  
+  const nameUpper = priority.name?.toUpperCase() || '';
+  if (nameUpper.includes('HIGH')) return 'bg-red-50 text-red-700 border-red-200';
+  if (nameUpper.includes('MEDIUM')) return 'bg-amber-50 text-amber-700 border-amber-200';
+  if (nameUpper.includes('LOW')) return 'bg-green-50 text-green-700 border-green-200';
+  return 'bg-gray-50 text-gray-700 border-gray-200';
+};
+```
+
+---
+
+## Performance Considerations
+
+<CardGroup cols={2}>
+  <Card title="Parallel Loading" icon="bolt">
+    Filter options (states, priorities, projects) are loaded in parallel using `Promise.all()` for faster initialization.
+  </Card>
+  <Card title="Client-Side Filtering" icon="filter">
+    All filtering happens client-side after initial data fetch, providing instant results without API latency.
+  </Card>
+  <Card title="Single API Call" icon="server">
+    Only one API call to `/api/tasks` is made per search, reducing server load.
+  </Card>
+  <Card title="Responsive UI" icon="mobile">
+    The search interface is fully responsive and works on all device sizes.
+  </Card>
+</CardGroup>
+
+<Warning>
+  For large datasets (thousands of tasks), consider implementing server-side pagination and filtering to improve performance.
+</Warning>
+
+---
+
+## Best Practices
+
+<Steps>
+  <Step title="Combine Multiple Filters">
+    Use multiple filters together for precise results. For example, search for "database" + High priority + In Progress state.
+  </Step>
+  
+  <Step title="Use Text Search Wisely">
+    Text search checks both title and description fields, so be specific to avoid too many results.
+  </Step>
+  
+  <Step title="Clear Filters Between Searches">
+    Reset filters when starting a new search to avoid confusion from previous criteria.
+  </Step>
+  
+  <Step title="Bookmark Common Searches">
+    Consider implementing saved search presets for frequently used filter combinations.
+  </Step>
+</Steps>

@@ -1,0 +1,429 @@
+---
+title: "Project Management"
+description: "Learn how to create, organize, and manage projects for task organization"
+---
+
+## Overview
+
+Projects provide a way to organize and group related tasks. Each task must be associated with a project, making projects a fundamental organizational unit in the system.
+
+## Project Data Structure
+
+The `TblProjects` model represents a project:
+
+<ParamField path="id" type="integer">
+  Unique project identifier (auto-generated)
+</ParamField>
+
+<ParamField path="name" type="string" required>
+  Project name (required)
+</ParamField>
+
+<ParamField path="description" type="string">
+  Project description (optional)
+</ParamField>
+
+<ParamField path="usercreate" type="integer">
+  ID of user who created the project
+</ParamField>
+
+<ParamField path="usermod" type="integer">
+  ID of user who last modified the project
+</ParamField>
+
+<ParamField path="creationDate" type="DateTime">
+  Timestamp when project was created
+</ParamField>
+
+<ParamField path="modificationDate" type="DateTime">
+  Timestamp of last modification
+</ParamField>
+
+<ParamField path="active" type="boolean">
+  Whether the project is active (soft delete flag)
+</ParamField>
+
+## API Endpoints
+
+### Get All Projects
+
+Retrieves all active projects in the system.
+
+```http
+GET /api/projects
+Authorization: Bearer {token}
+```
+
+<CodeGroup>
+```javascript React Frontend
+const loadProjects = async () => {
+  const response = await fetch('/api/projects', {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  
+  const result = await response.json();
+  if (result.success) {
+    setProjects(result.data || []);
+  }
+};
+```
+
+```json Response
+{
+  "success": true,
+  "message": "Projects retrieved successfully",
+  "data": [
+    {
+      "id": 1,
+      "name": "Legacy Migration",
+      "description": "Migrate legacy system to new platform",
+      "usercreate": 1,
+      "usermod": null,
+      "creationDate": "2026-01-15T09:00:00",
+      "modificationDate": null,
+      "active": true
+    },
+    {
+      "id": 2,
+      "name": "API Development",
+      "description": "Build RESTful API endpoints",
+      "usercreate": 2,
+      "usermod": 2,
+      "creationDate": "2026-02-01T10:30:00",
+      "modificationDate": "2026-02-15T14:20:00",
+      "active": true
+    }
+  ]
+}
+```
+</CodeGroup>
+
+### Get Project by ID
+
+Retrieves a specific project by its ID.
+
+```http
+GET /api/projects/{id}
+Authorization: Bearer {token}
+```
+
+<CodeGroup>
+```json Response
+{
+  "success": true,
+  "message": "Project retrieved successfully",
+  "data": {
+    "id": 1,
+    "name": "Legacy Migration",
+    "description": "Migrate legacy system to new platform",
+    "usercreate": 1,
+    "creationDate": "2026-01-15T09:00:00",
+    "active": true
+  }
+}
+```
+</CodeGroup>
+
+### Create Project
+
+Creates a new project.
+
+```http
+POST /api/projects
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+<CodeGroup>
+```javascript React Frontend
+const handleSubmitAdd = async () => {
+  const response = await fetch('/api/projects', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      name: nombre.trim(),
+      description: descripcion.trim()
+    })
+  });
+
+  const result = await response.json();
+  if (result.success) {
+    await loadProjects();
+    showNotification('Project created successfully', 'success');
+  }
+};
+```
+
+```json Request Body
+{
+  "name": "Legacy Migration",
+  "description": "Migrate legacy system to new platform"
+}
+```
+
+```json Response
+{
+  "success": true,
+  "message": "Project created successfully",
+  "data": {
+    "id": 5,
+    "name": "Legacy Migration",
+    "description": "Migrate legacy system to new platform",
+    "usercreate": 1,
+    "creationDate": "2026-03-04T10:00:00",
+    "active": true
+  }
+}
+```
+</CodeGroup>
+
+<Note>
+The `usercreate` field is automatically set from the authenticated user's JWT token.
+</Note>
+
+### Update Project
+
+Updates an existing project.
+
+```http
+PUT /api/projects
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+<CodeGroup>
+```javascript React Frontend
+const handleSubmitUpdate = async () => {
+  const response = await fetch('/api/projects', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      id: selectedId,
+      name: nombre.trim(),
+      description: descripcion.trim()
+    })
+  });
+
+  const result = await response.json();
+  if (result.success) {
+    await loadProjects();
+    showNotification('Project updated successfully', 'success');
+  }
+};
+```
+
+```json Request Body
+{
+  "id": 5,
+  "name": "Legacy System Migration",
+  "description": "Updated description for the migration project"
+}
+```
+
+```json Response
+{
+  "success": true,
+  "message": "Project updated successfully",
+  "data": {
+    "id": 5,
+    "name": "Legacy System Migration",
+    "description": "Updated description for the migration project",
+    "usercreate": 1,
+    "usermod": 1,
+    "creationDate": "2026-03-04T10:00:00",
+    "modificationDate": "2026-03-04T15:30:00",
+    "active": true
+  }
+}
+```
+</CodeGroup>
+
+### Delete Project
+
+Soft deletes a project by setting the `active` flag to false.
+
+```http
+DELETE /api/projects/{id}
+Authorization: Bearer {token}
+```
+
+<CodeGroup>
+```javascript React Frontend
+const handleDelete = async () => {
+  if (window.confirm('Are you sure you want to delete this project?')) {
+    const response = await fetch(`/api/projects/${selectedId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const result = await response.json();
+    if (result.success) {
+      await loadProjects();
+      showNotification('Project deleted successfully', 'success');
+    }
+  }
+};
+```
+
+```json Response
+{
+  "success": true,
+  "message": "Project deleted successfully",
+  "data": null
+}
+```
+</CodeGroup>
+
+<Warning>
+Deleting a project does not delete associated tasks. Consider reassigning tasks before deleting a project.
+</Warning>
+
+## Frontend Implementation
+
+The Project Manager is implemented in `src/pages/ProjectManager.jsx`.
+
+### Component State
+
+```javascript
+const ProjectManager = () => {
+  const [projects, setProjects] = useState([]);
+  const [nombre, setNombre] = useState('');
+  const [descripcion, setDescripcion] = useState('');
+  const [selectedId, setSelectedId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  const { token } = useAuth();
+};
+```
+
+### Project List Display
+
+Projects are displayed in a table with the following information:
+
+- **ID**: Unique project identifier
+- **Name**: Project name
+- **Description**: Project description (if available)
+- **Created**: Creation timestamp
+- **Status**: Active/Inactive badge
+
+```javascript
+<table className="min-w-full divide-y divide-slate-200">
+  <thead className="bg-slate-50">
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Created</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {projects.map(p => (
+      <tr key={p.id} onClick={() => onRowClick(p)}>
+        <td>#{p.id}</td>
+        <td>{p.name}</td>
+        <td>{p.description || 'No description'}</td>
+        <td>{formatDate(p.creationDate)}</td>
+        <td>
+          <span className={p.active ? 'badge-active' : 'badge-inactive'}>
+            {p.active ? '✓ Active' : '✕ Inactive'}
+          </span>
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+```
+
+### Modal Form
+
+The project form is displayed in a modal for creating and editing:
+
+```javascript
+<div className="modal">
+  <h2>{selectedId ? 'Edit Project' : 'Create New Project'}</h2>
+  
+  <input
+    placeholder="Enter project name"
+    value={nombre}
+    onChange={e => setNombre(e.target.value)}
+  />
+  
+  <textarea
+    placeholder="Enter project description"
+    value={descripcion}
+    onChange={e => setDescripcion(e.target.value)}
+  />
+  
+  <button onClick={selectedId ? handleSubmitUpdate : handleSubmitAdd}>
+    {selectedId ? 'Update Project' : 'Create Project'}
+  </button>
+  
+  {selectedId && (
+    <button onClick={handleDelete}>Delete</button>
+  )}
+</div>
+```
+
+## Project-Task Relationship
+
+Projects are linked to tasks through the `projectId` field. You can:
+
+1. **View tasks by project** using the `/api/tasks/report/by-project` endpoint
+2. **Filter tasks** by selecting a project in the Task Manager
+3. **Track project progress** by viewing task statistics per project
+
+### Example: Getting Tasks for a Project
+
+```javascript
+const getTasksForProject = async (projectId) => {
+  const response = await fetch('/api/tasks', {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  
+  const result = await response.json();
+  if (result.success) {
+    const projectTasks = result.data.filter(task => task.projectId === projectId);
+    console.log(`Found ${projectTasks.length} tasks for project ${projectId}`);
+  }
+};
+```
+
+## Best Practices
+
+<Tabs>
+  <Tab title="Naming">
+    Use clear, descriptive project names that reflect the work scope:
+    - ✅ "Legacy System Migration"
+    - ✅ "Q1 2026 API Refactoring"
+    - ❌ "Project 1"
+    - ❌ "Stuff"
+  </Tab>
+  
+  <Tab title="Organization">
+    - Create projects that align with your team structure or delivery milestones
+    - Use the description field to provide context and goals
+    - Archive (soft delete) completed projects rather than keeping them active
+  </Tab>
+  
+  <Tab title="Task Association">
+    - Always assign tasks to an appropriate project
+    - Consider creating a "General" or "Miscellaneous" project for ad-hoc tasks
+    - Review project task counts periodically using the reporting endpoints
+  </Tab>
+</Tabs>

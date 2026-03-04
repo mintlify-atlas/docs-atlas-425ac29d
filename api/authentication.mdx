@@ -1,0 +1,144 @@
+---
+title: 'Authentication'
+description: 'JWT authentication endpoints for the Legacy Migration Task Manager'
+---
+
+## Overview
+
+The Legacy Migration Task Manager uses JWT (JSON Web Token) authentication. After logging in, you'll receive a token that must be included in the `Authorization` header for all protected endpoints.
+
+## Login
+
+<Card title="POST /api/Auth/login" icon="right-to-bracket">
+  Authenticate a user and receive a JWT token
+</Card>
+
+### Request Body
+
+<ParamField body="Username" type="string" required>
+  The username for authentication
+</ParamField>
+
+<ParamField body="Password" type="string" required>
+  The user's password
+</ParamField>
+
+### Response
+
+<ResponseField name="Token" type="string">
+  JWT token for authentication
+</ResponseField>
+
+<ResponseField name="User" type="object">
+  User information
+  <Expandable title="User object">
+    <ResponseField name="id" type="integer">
+      User ID
+    </ResponseField>
+    <ResponseField name="username" type="string">
+      Username
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example Request
+
+```bash
+curl -X POST https://api.example.com/api/Auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "Username": "john_doe",
+    "Password": "securePassword123"
+  }'
+```
+
+### Example Response
+
+<CodeGroup>
+```json 200 OK
+{
+  "Token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "User": {
+    "id": 1,
+    "username": "john_doe"
+  }
+}
+```
+
+```json 400 Bad Request
+"Username y password son requeridos"
+```
+
+```json 401 Unauthorized
+Unauthorized
+```
+</CodeGroup>
+
+### Status Codes
+
+- `200 OK` - Successfully authenticated
+- `400 Bad Request` - Missing username or password
+- `401 Unauthorized` - Invalid credentials or inactive user
+
+---
+
+## Token Format
+
+The JWT token contains the following claims:
+
+<ParamField path="sub" type="string">
+  User ID (from JwtRegisteredClaimNames.Sub)
+</ParamField>
+
+<ParamField path="unique_name" type="string">
+  Username (from JwtRegisteredClaimNames.UniqueName)
+</ParamField>
+
+<ParamField path="iss" type="string">
+  Token issuer (configured in Jwt:Issuer or JWT_ISSUER)
+</ParamField>
+
+<ParamField path="aud" type="string">
+  Token audience (configured in Jwt:Audience or JWT_AUDIENCE)
+</ParamField>
+
+<ParamField path="exp" type="number">
+  Expiration timestamp (default: 60 minutes from issue time)
+</ParamField>
+
+---
+
+## Using Tokens in Requests
+
+Include the JWT token in the `Authorization` header with the `Bearer` scheme:
+
+```bash
+curl -X GET https://api.example.com/api/Tasks \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+### Protected Endpoints
+
+All endpoints except `/api/Auth/login` require authentication. If the token is missing, invalid, or expired, you'll receive a `401 Unauthorized` response.
+
+### Token Expiration
+
+Tokens expire after 60 minutes by default (configurable via `Jwt:ExpiresMinutes`). You'll need to re-authenticate when your token expires.
+
+---
+
+## Security Notes
+
+<Warning>
+  - Passwords are currently compared as plain text. It's recommended to implement password hashing (e.g., bcrypt) before deploying to production.
+  - Store tokens securely on the client side (e.g., httpOnly cookies or secure storage).
+  - Never expose the JWT secret key in client-side code.
+</Warning>
+
+<Tip>
+  Configure the JWT settings via environment variables:
+  - `JWT_KEY` - Secret key for signing tokens
+  - `JWT_ISSUER` - Token issuer
+  - `JWT_AUDIENCE` - Token audience
+  - `Jwt:ExpiresMinutes` - Token expiration time in minutes
+</Tip>

@@ -1,0 +1,458 @@
+---
+title: "Comment System"
+description: "Learn how to add, view, and manage comments on tasks"
+---
+
+## Overview
+
+The Comment System allows users to add notes, updates, and discussions to tasks. Comments are tracked with timestamps and user information, providing a complete audit trail of task-related conversations.
+
+## Comment Data Structure
+
+Comments are associated with tasks and include user and timestamp information:
+
+<ParamField path="id" type="integer">
+  Unique comment identifier (auto-generated)
+</ParamField>
+
+<ParamField path="taskId" type="integer" required>
+  ID of the task this comment belongs to
+</ParamField>
+
+<ParamField path="comment" type="string" required>
+  The comment text content
+</ParamField>
+
+<ParamField path="userCreate" type="integer">
+  ID of user who created the comment
+</ParamField>
+
+<ParamField path="userCreateName" type="string">
+  Username of the comment creator
+</ParamField>
+
+<ParamField path="userMod" type="integer">
+  ID of user who last modified the comment (if applicable)
+</ParamField>
+
+<ParamField path="userModName" type="string">
+  Username of last modifier (if applicable)
+</ParamField>
+
+<ParamField path="creationDate" type="DateTime">
+  Timestamp when comment was created
+</ParamField>
+
+<ParamField path="modificationDate" type="DateTime">
+  Timestamp of last modification
+</ParamField>
+
+<ParamField path="taskTitle" type="string">
+  Title of the associated task
+</ParamField>
+
+## API Endpoints
+
+### Get Comments by Task ID
+
+Retrieves all comments for a specific task.
+
+```http
+GET /api/comments/task/{taskId}
+Authorization: Bearer {token}
+```
+
+<CodeGroup>
+```javascript React Frontend
+const loadCommentsByTask = async () => {
+  const response = await fetch(`/api/comments/task/${taskId}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  
+  const result = await response.json();
+  if (result.success) {
+    setComments(result.data || []);
+  }
+};
+```
+
+```json Response
+{
+  "success": true,
+  "message": "Comments retrieved successfully",
+  "data": [
+    {
+      "id": 1,
+      "taskId": 5,
+      "comment": "Started working on database schema migration",
+      "userCreate": 2,
+      "userCreateName": "john_doe",
+      "userMod": null,
+      "userModName": null,
+      "creationDate": "2026-03-01T10:30:00",
+      "modificationDate": null,
+      "taskTitle": "Migrate database schema"
+    },
+    {
+      "id": 2,
+      "taskId": 5,
+      "comment": "Completed initial analysis. Moving to implementation phase.",
+      "userCreate": 2,
+      "userCreateName": "john_doe",
+      "userMod": null,
+      "userModName": null,
+      "creationDate": "2026-03-02T14:15:00",
+      "modificationDate": null,
+      "taskTitle": "Migrate database schema"
+    }
+  ]
+}
+```
+</CodeGroup>
+
+### Get All Comments
+
+Retrieves all comments across all tasks in the system.
+
+```http
+GET /api/comments/all
+Authorization: Bearer {token}
+```
+
+<CodeGroup>
+```javascript React Frontend
+const loadAllComments = async () => {
+  const response = await fetch('/api/comments/all', {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  
+  const result = await response.json();
+  if (result.success) {
+    setComments(result.data || []);
+  }
+};
+```
+
+```json Response
+{
+  "success": true,
+  "message": "All comments retrieved successfully",
+  "data": [
+    {
+      "id": 1,
+      "taskId": 5,
+      "comment": "Started working on database schema migration",
+      "userCreate": 2,
+      "userCreateName": "john_doe",
+      "creationDate": "2026-03-01T10:30:00",
+      "taskTitle": "Migrate database schema"
+    },
+    {
+      "id": 2,
+      "taskId": 8,
+      "comment": "API endpoint implementation complete",
+      "userCreate": 3,
+      "userCreateName": "jane_smith",
+      "creationDate": "2026-03-01T11:00:00",
+      "taskTitle": "Build user authentication API"
+    }
+  ]
+}
+```
+</CodeGroup>
+
+<Note>
+This endpoint is useful for activity feeds or admin dashboards showing recent comments across all tasks.
+</Note>
+
+### Create Comment
+
+Adds a new comment to a task.
+
+```http
+POST /api/comments
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+<CodeGroup>
+```javascript React Frontend
+const handleSubmitComment = async () => {
+  if (!comment.trim()) {
+    setError('Comment is required');
+    return;
+  }
+  
+  const response = await fetch('/api/comments', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      taskId: parseInt(taskId, 10),
+      comment: comment.trim()
+    })
+  });
+
+  const result = await response.json();
+  if (result.success) {
+    setComment(''); // Clear input
+    await loadCommentsByTask(); // Reload comments
+  }
+};
+```
+
+```json Request Body
+{
+  "taskId": 5,
+  "comment": "Updated the database connection settings. Please review before deployment."
+}
+```
+
+```json Success Response
+{
+  "success": true,
+  "message": "Comment created successfully",
+  "data": {
+    "id": 15,
+    "taskId": 5,
+    "comment": "Updated the database connection settings. Please review before deployment.",
+    "userCreate": 2,
+    "userCreateName": "john_doe",
+    "creationDate": "2026-03-04T10:30:00",
+    "taskTitle": "Migrate database schema"
+  }
+}
+```
+
+```json Error Response (Empty Comment)
+{
+  "success": false,
+  "message": "Comment is required",
+  "data": null
+}
+```
+</CodeGroup>
+
+<Note>
+The `userCreate` field is automatically set from the authenticated user's JWT token, so you don't need to include it in the request.
+</Note>
+
+## Frontend Implementation
+
+The Comment Manager is implemented in `src/pages/CommentManager.jsx`.
+
+### Component Structure
+
+```javascript
+const CommentManager = () => {
+  const [taskId, setTaskId] = useState('');
+  const [comment, setComment] = useState('');
+  const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showAllComments, setShowAllComments] = useState(false);
+  
+  const { token } = useAuth();
+  const { logHistoryEvent } = useHistoryLogger(token);
+};
+```
+
+### Comment Input Form
+
+```javascript
+<div className="comment-form">
+  <input
+    type="number"
+    placeholder="Enter task ID"
+    value={taskId}
+    onChange={e => setTaskId(e.target.value)}
+    min="1"
+  />
+  
+  <textarea
+    rows={4}
+    placeholder="Enter your comment"
+    value={comment}
+    onChange={e => setComment(e.target.value)}
+  />
+  
+  <button onClick={handleSubmitComment}>
+    Add Comment
+  </button>
+  
+  <button onClick={loadCommentsByTask}>
+    Load Comments
+  </button>
+  
+  <button onClick={loadAllComments}>
+    Load All Comments
+  </button>
+</div>
+```
+
+### Displaying Comments
+
+```javascript
+<div className="comments-list">
+  {comments.map((commentItem) => (
+    <div key={commentItem.id} className="comment-card">
+      <div className="comment-header">
+        <span className="username">{commentItem.userCreateName}</span>
+        {showAllComments && (
+          <span className="task-badge">
+            Task #{commentItem.taskId}: {commentItem.taskTitle}
+          </span>
+        )}
+        <span className="timestamp">
+          {formatDate(commentItem.creationDate)}
+        </span>
+      </div>
+      
+      <div className="comment-body">
+        {commentItem.comment}
+      </div>
+      
+      {commentItem.modificationDate && (
+        <div className="comment-footer">
+          Modified: {formatDate(commentItem.modificationDate)}
+          {commentItem.userModName && ` by ${commentItem.userModName}`}
+        </div>
+      )}
+    </div>
+  ))}
+</div>
+```
+
+### Date Formatting
+
+```javascript
+const formatDate = (dateString) => {
+  if (!dateString) return '-';
+  try {
+    return new Date(dateString).toLocaleString('es-ES');
+  } catch {
+    return '-';
+  }
+};
+```
+
+## History Integration
+
+Comments automatically create history log entries when added:
+
+```javascript
+const handleSubmitComment = async () => {
+  const response = await apiRequest('/comments', {
+    method: 'POST',
+    body: JSON.stringify({
+      taskId: parseInt(taskId.trim(), 10),
+      comment: comment.trim()
+    })
+  });
+
+  if (response.success) {
+    // Log the comment action in history
+    await logHistoryEvent(
+      parseInt(taskId.trim(), 10),
+      'COMMENTED',
+      `Comment added: "${comment.trim().substring(0, 100)}${comment.trim().length > 100 ? '...' : ''}"`
+    );
+    
+    // Reload comments
+    await loadCommentsByTask();
+  }
+};
+```
+
+This creates a history entry that can be viewed in the [History Manager](/advanced/history).
+
+## Use Cases
+
+<Tabs>
+  <Tab title="Progress Updates">
+    Use comments to document progress on tasks:
+    
+    ```
+    "Started implementation of user authentication module"
+    "Completed unit tests - all passing"
+    "Ready for code review"
+    ```
+  </Tab>
+  
+  <Tab title="Issue Tracking">
+    Document issues or blockers:
+    
+    ```
+    "Blocked: Waiting for API credentials from DevOps team"
+    "Issue found: Database connection timing out. Investigating..."
+    "Resolved: Updated connection pool settings"
+    ```
+  </Tab>
+  
+  <Tab title="Collaboration">
+    Communicate with team members:
+    
+    ```
+    "@jane_smith - Can you review the database changes?"
+    "Updated based on feedback from code review"
+    "Question: Should we use JWT or session-based auth?"
+    ```
+  </Tab>
+  
+  <Tab title="Documentation">
+    Record important decisions or notes:
+    
+    ```
+    "Decision: Using PostgreSQL for better JSON support"
+    "Note: Remember to update API documentation after deployment"
+    "Important: Database migration must run during maintenance window"
+    ```
+  </Tab>
+</Tabs>
+
+## Best Practices
+
+1. **Be Specific**: Include relevant details about what was done or what's needed
+2. **Timestamp Awareness**: Comments are automatically timestamped, so use them to track chronological progress
+3. **Context**: When viewing all comments, the task title is included to provide context
+4. **Length**: While there's no strict limit, keep comments concise and focused
+5. **Frequency**: Add comments at key milestones rather than for every minor change
+
+## Comment Workflow Example
+
+```javascript
+// 1. User selects a task and loads its comments
+await loadCommentsByTask(taskId);
+
+// 2. User reads existing comments to understand context
+comments.forEach(c => console.log(`${c.userCreateName}: ${c.comment}`));
+
+// 3. User adds a new comment with status update
+await handleSubmitComment({
+  taskId: 5,
+  comment: "Database migration completed successfully. No errors reported."
+});
+
+// 4. System automatically:
+//    - Creates comment record
+//    - Associates with user from JWT token
+//    - Timestamps the comment
+//    - Logs to history
+//    - May trigger notification (if configured)
+```
+
+## Integration with Other Features
+
+- **Tasks**: Comments are always associated with a specific task
+- **Users**: Comment author is tracked automatically from authentication
+- **History**: Comments create history entries for audit trails
+- **Notifications**: Future enhancement could notify assigned users of new comments
+
+See the [Task Management](/features/tasks) and [History](/advanced/history) documentation for related functionality.

@@ -1,0 +1,527 @@
+---
+title: 'Activity History & Audit Trail'
+description: 'Track all changes to tasks with comprehensive audit logging and history tracking'
+icon: 'clock-rotate-left'
+---
+
+## Overview
+
+The history system provides a comprehensive audit trail of all task changes. Every action performed on a task is logged with a timestamp, action type, and detailed description.
+
+<Info>
+  History records are never truly deleted - they use soft deletion (Active flag) to maintain audit trail integrity.
+</Info>
+
+---
+
+## History Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Task History" icon="file-lines" href="#get-task-history">
+    View all changes for a specific task
+  </Card>
+  <Card title="Complete History" icon="database" href="#get-all-history">
+    View system-wide activity log
+  </Card>
+  <Card title="Create Record" icon="plus" href="#create-history-record">
+    Manually log a history entry
+  </Card>
+  <Card title="Delete Record" icon="trash" href="#delete-history-record">
+    Soft delete a history record
+  </Card>
+</CardGroup>
+
+---
+
+## Get Task History
+
+Retrieve all history records for a specific task.
+
+### GET /api/history/task/{taskId}
+
+Returns all active history records associated with a task, ordered by most recent first.
+
+<CodeGroup>
+```bash cURL
+curl -X GET http://localhost:5000/api/history/task/123 \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const taskId = 123;
+const response = await fetch(`/api/history/task/${taskId}`, {
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+const history = await response.json();
+```
+
+```csharp C#
+var history = await _context.TblHistory
+    .Where(h => h.TaskId == taskId && h.Active)
+    .OrderByDescending(h => h.CreationDate)
+    .Select(h => new HistoryDto
+    {
+        Id = h.Id,
+        TaskId = h.TaskId,
+        Action = h.Action,
+        Description = h.Description,
+        CreationDate = h.CreationDate,
+        Active = h.Active
+    })
+    .ToListAsync();
+```
+</CodeGroup>
+
+### Response Format
+
+<ResponseField name="success" type="boolean" required>
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="data" type="array" required>
+  Array of history records
+  
+  <ResponseField name="id" type="integer">
+    Unique identifier for the history record
+  </ResponseField>
+  
+  <ResponseField name="taskId" type="integer">
+    ID of the associated task
+  </ResponseField>
+  
+  <ResponseField name="action" type="string">
+    Type of action performed (CREATED, UPDATED, STATE_CHANGED, etc.)
+  </ResponseField>
+  
+  <ResponseField name="description" type="string">
+    Detailed description of what changed
+  </ResponseField>
+  
+  <ResponseField name="creationDate" type="datetime">
+    When the action was performed
+  </ResponseField>
+  
+  <ResponseField name="active" type="boolean">
+    Whether the record is active (soft deletion flag)
+  </ResponseField>
+</ResponseField>
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 456,
+      "taskId": 123,
+      "action": "STATE_CHANGED",
+      "description": "State changed from 'In Progress' to 'Completed' by john.doe",
+      "creationDate": "2026-03-04T14:30:00",
+      "active": true
+    },
+    {
+      "id": 455,
+      "taskId": 123,
+      "action": "UPDATED",
+      "description": "Task description updated by jane.smith",
+      "creationDate": "2026-03-03T10:15:00",
+      "active": true
+    },
+    {
+      "id": 454,
+      "taskId": 123,
+      "action": "CREATED",
+      "description": "Task created by admin",
+      "creationDate": "2026-03-01T09:00:00",
+      "active": true
+    }
+  ]
+}
+```
+
+---
+
+## Get All History
+
+Retrieve the complete system-wide activity log.
+
+### GET /api/history/all
+
+Returns all active history records across all tasks, ordered by most recent first.
+
+<CodeGroup>
+```bash cURL
+curl -X GET http://localhost:5000/api/history/all \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('/api/history/all', {
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+const allHistory = await response.json();
+```
+
+```csharp C#
+return await _context.TblHistory
+    .Where(h => h.Active)
+    .OrderByDescending(h => h.CreationDate)
+    .Select(h => new HistoryDto
+    {
+        Id = h.Id,
+        TaskId = h.TaskId,
+        Action = h.Action,
+        Description = h.Description,
+        CreationDate = h.CreationDate,
+        Active = h.Active
+    })
+    .ToListAsync();
+```
+</CodeGroup>
+
+<Warning>
+  This endpoint can return a large amount of data. Consider implementing pagination for production use.
+</Warning>
+
+---
+
+## Create History Record
+
+Manually create a history entry (used for custom events or comments).
+
+### POST /api/history
+
+Creates a new history record for a task.
+
+<CodeGroup>
+```bash cURL
+curl -X POST http://localhost:5000/api/history \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "taskId": 123,
+    "action": "COMMENTED",
+    "description": "User added a comment: This task needs review"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('/api/history', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    taskId: 123,
+    action: 'COMMENTED',
+    description: 'User added a comment: This task needs review'
+  })
+});
+const result = await response.json();
+```
+</CodeGroup>
+
+### Request Body
+
+<ResponseField name="taskId" type="integer" required>
+  ID of the task to log history for
+</ResponseField>
+
+<ResponseField name="action" type="string" required>
+  Type of action (CREATED, UPDATED, COMMENTED, etc.)
+</ResponseField>
+
+<ResponseField name="description" type="string" required>
+  Detailed description of the action
+</ResponseField>
+
+### Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 457,
+    "taskId": 123,
+    "action": "COMMENTED",
+    "description": "User added a comment: This task needs review",
+    "creationDate": "2026-03-04T15:45:00",
+    "active": true
+  }
+}
+```
+
+---
+
+## Delete History Record
+
+Soft delete a history record (sets Active flag to false).
+
+### DELETE /api/history/{historyId}
+
+Marks a history record as inactive without actually deleting it from the database.
+
+<CodeGroup>
+```bash cURL
+curl -X DELETE http://localhost:5000/api/history/457 \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const historyId = 457;
+const response = await fetch(`/api/history/${historyId}`, {
+  method: 'DELETE',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+const result = await response.json();
+```
+
+```csharp C#
+var history = await _context.TblHistory.FindAsync(historyId);
+if (history == null)
+    return false;
+
+history.Active = false;
+await _context.SaveChangesAsync();
+return true;
+```
+</CodeGroup>
+
+### Response
+
+```json
+{
+  "success": true,
+  "message": "History deleted successfully"
+}
+```
+
+<Note>
+  Deleted history records remain in the database with `Active = false` to maintain audit trail integrity.
+</Note>
+
+---
+
+## Action Types
+
+Common action types used in the history system:
+
+<CardGroup cols={3}>
+  <Card title="CREATED" icon="plus">
+    Task was created
+  </Card>
+  <Card title="UPDATED" icon="pen">
+    General task update
+  </Card>
+  <Card title="DELETED" icon="trash">
+    Task was deleted
+  </Card>
+  <Card title="STATE_CHANGED" icon="arrows-spin">
+    Workflow state changed
+  </Card>
+  <Card title="PRIORITY_CHANGED" icon="exclamation">
+    Priority level changed
+  </Card>
+  <Card title="ASSIGNED_CHANGED" icon="user-group">
+    Task reassigned to different user
+  </Card>
+  <Card title="TITLE_CHANGED" icon="heading">
+    Task title modified
+  </Card>
+  <Card title="DESCRIPTION_CHANGED" icon="file-lines">
+    Task description modified
+  </Card>
+  <Card title="COMMENTED" icon="comment">
+    Comment or note added
+  </Card>
+</CardGroup>
+
+---
+
+## Frontend History Manager
+
+The HistoryManager component provides an expandable UI for viewing history records.
+
+### Key Features
+
+**Expandable Records** (HistoryManager.jsx:90-95)
+```javascript
+const toggleExpand = (id) => {
+  setExpandedItems(prev => ({
+    ...prev,
+    [id]: !prev[id]
+  }));
+};
+```
+
+**Action Color Coding** (HistoryManager.jsx:109-127)
+```javascript
+const getActionColor = (action) => {
+  switch (action.toUpperCase()) {
+    case 'CREATED':
+      return 'bg-green-50 border-green-200';
+    case 'UPDATED':
+    case 'STATE_CHANGED':
+    case 'PRIORITY_CHANGED':
+      return 'bg-blue-50 border-blue-200';
+    case 'DELETED':
+      return 'bg-red-50 border-red-200';
+    case 'COMMENTED':
+      return 'bg-purple-50 border-purple-200';
+    default:
+      return 'bg-gray-50 border-gray-200';
+  }
+};
+```
+
+**Date Formatting** (HistoryManager.jsx:97-107)
+```javascript
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return date.toLocaleString('es-ES', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+};
+```
+
+### Loading Options
+
+The interface provides two loading modes:
+
+1. **Load by Task ID**: View history for a specific task
+2. **Load All**: View system-wide activity log
+
+```javascript
+// Load specific task history
+const response = await apiRequest(`/history/task/${taskId}`);
+
+// Load all history
+const response = await apiRequest('/history/all');
+```
+
+---
+
+## Implementation in Services
+
+### HistoryService.cs
+
+The backend service (HistoryService.cs:17-86) provides four main methods:
+
+**Get History by Task ID** (lines 17-32)
+```csharp
+public async Task<List<HistoryDto>> GetHistoryByTaskIdAsync(int taskId)
+{
+    return await _context.TblHistory
+        .Where(h => h.TaskId == taskId && h.Active)
+        .OrderByDescending(h => h.CreationDate)
+        .Select(h => new HistoryDto { ... })
+        .ToListAsync();
+}
+```
+
+**Get All History** (lines 34-49)
+```csharp
+public async Task<List<HistoryDto>> GetAllHistoryAsync()
+{
+    return await _context.TblHistory
+        .Where(h => h.Active)
+        .OrderByDescending(h => h.CreationDate)
+        .Select(h => new HistoryDto { ... })
+        .ToListAsync();
+}
+```
+
+**Create History** (lines 51-74)
+```csharp
+public async Task<HistoryDto> CreateHistoryAsync(int taskId, string action, string description)
+{
+    var history = new TblHistory {
+        TaskId = taskId,
+        Action = action,
+        Description = description,
+        CreationDate = DateTime.Now,
+        Active = true
+    };
+    _context.TblHistory.Add(history);
+    await _context.SaveChangesAsync();
+    return new HistoryDto { ... };
+}
+```
+
+**Delete History** (lines 76-85)
+```csharp
+public async Task<bool> DeleteHistoryAsync(int historyId)
+{
+    var history = await _context.TblHistory.FindAsync(historyId);
+    if (history == null) return false;
+    
+    history.Active = false;
+    await _context.SaveChangesAsync();
+    return true;
+}
+```
+
+---
+
+## Best Practices
+
+<Steps>
+  <Step title="Descriptive Messages">
+    Write clear, actionable history descriptions that include who made the change and what changed.
+    
+    Good: "Priority changed from 'Low' to 'High' by john.doe"
+    
+    Bad: "Updated"
+  </Step>
+  
+  <Step title="Consistent Action Types">
+    Use standardized action type strings to make filtering and reporting easier.
+  </Step>
+  
+  <Step title="Never Hard Delete">
+    Always use soft deletion (Active flag) to maintain complete audit trail.
+  </Step>
+  
+  <Step title="Include Context">
+    When logging changes, include before/after values to make the history meaningful.
+  </Step>
+  
+  <Step title="Timestamp Accuracy">
+    Use server-side timestamps (DateTime.Now) rather than client-side to ensure consistency.
+  </Step>
+</Steps>
+
+---
+
+## Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Audit Compliance" icon="shield-check">
+    Meet regulatory requirements by maintaining complete change history for all tasks.
+  </Card>
+  <Card title="Debugging" icon="bug">
+    Investigate issues by reviewing the sequence of changes that led to a problem.
+  </Card>
+  <Card title="Accountability" icon="user-check">
+    Track who made what changes and when for team accountability.
+  </Card>
+  <Card title="Rollback Reference" icon="rotate-left">
+    Use history to understand previous states when rolling back changes.
+  </Card>
+</CardGroup>

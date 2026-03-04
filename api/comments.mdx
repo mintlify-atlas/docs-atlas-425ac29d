@@ -1,0 +1,412 @@
+---
+title: 'Comments'
+description: 'Comment management endpoints for adding and retrieving task comments'
+---
+
+<Note>
+  All endpoints require authentication. Include the JWT token in the `Authorization` header.
+</Note>
+
+## Get Comments By Task ID
+
+<Card title="GET /api/Comments/task/{taskId}" icon="comments">
+  Retrieve all comments for a specific task
+</Card>
+
+### Path Parameters
+
+<ParamField path="taskId" type="integer" required>
+  The task ID to retrieve comments for
+</ParamField>
+
+### Headers
+
+<ParamField header="Authorization" type="string" required>
+  Bearer token for authentication
+</ParamField>
+
+### Response
+
+<ResponseField name="Success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="Message" type="string">
+  Response message
+</ResponseField>
+
+<ResponseField name="Data" type="array">
+  Array of comment objects
+  <Expandable title="Comment object">
+    <ResponseField name="Id" type="integer">
+      Comment ID
+    </ResponseField>
+    <ResponseField name="TaskId" type="integer">
+      Associated task ID
+    </ResponseField>
+    <ResponseField name="Comment" type="string">
+      Comment text content
+    </ResponseField>
+    <ResponseField name="UserCreate" type="integer">
+      User ID who created the comment
+    </ResponseField>
+    <ResponseField name="UserCreateName" type="string">
+      Username of the comment creator
+    </ResponseField>
+    <ResponseField name="UserMod" type="integer">
+      User ID who last modified the comment
+    </ResponseField>
+    <ResponseField name="UserModName" type="string">
+      Username of the last modifier
+    </ResponseField>
+    <ResponseField name="CreationDate" type="string">
+      Comment creation date (ISO 8601 format)
+    </ResponseField>
+    <ResponseField name="ModificationDate" type="string">
+      Last modification date (ISO 8601 format)
+    </ResponseField>
+    <ResponseField name="TaskTitle" type="string">
+      Title of the associated task
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example Request
+
+```bash
+curl -X GET https://api.example.com/api/Comments/task/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Example Response
+
+<CodeGroup>
+```json 200 OK
+{
+  "Success": true,
+  "Message": "Comments retrieved successfully",
+  "Data": [
+    {
+      "Id": 1,
+      "TaskId": 1,
+      "Comment": "Started working on the database schema migration. Initial analysis shows we need to update 15 tables.",
+      "UserCreate": 5,
+      "UserCreateName": "John Doe",
+      "UserMod": null,
+      "UserModName": null,
+      "CreationDate": "2026-03-02T10:30:00Z",
+      "ModificationDate": null,
+      "TaskTitle": "Migrate database schema"
+    },
+    {
+      "Id": 2,
+      "TaskId": 1,
+      "Comment": "Completed the first phase. Moving to indexes next.",
+      "UserCreate": 5,
+      "UserCreateName": "John Doe",
+      "UserMod": null,
+      "UserModName": null,
+      "CreationDate": "2026-03-03T15:45:00Z",
+      "ModificationDate": null,
+      "TaskTitle": "Migrate database schema"
+    }
+  ]
+}
+```
+
+```json 400 Bad Request
+{
+  "Success": false,
+  "Message": "Task not found",
+  "Data": null
+}
+```
+</CodeGroup>
+
+---
+
+## Get All Comments
+
+<Card title="GET /api/Comments/all" icon="message">
+  Retrieve all comments in the system
+</Card>
+
+### Headers
+
+<ParamField header="Authorization" type="string" required>
+  Bearer token for authentication
+</ParamField>
+
+### Response
+
+<ResponseField name="Success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="Message" type="string">
+  Response message
+</ResponseField>
+
+<ResponseField name="Data" type="array">
+  Array of all comment objects across all tasks
+</ResponseField>
+
+### Example Request
+
+```bash
+curl -X GET https://api.example.com/api/Comments/all \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Example Response
+
+```json 200 OK
+{
+  "Success": true,
+  "Message": "All comments retrieved successfully",
+  "Data": [
+    {
+      "Id": 1,
+      "TaskId": 1,
+      "Comment": "Started working on the database schema migration.",
+      "UserCreate": 5,
+      "UserCreateName": "John Doe",
+      "UserMod": null,
+      "UserModName": null,
+      "CreationDate": "2026-03-02T10:30:00Z",
+      "ModificationDate": null,
+      "TaskTitle": "Migrate database schema"
+    },
+    {
+      "Id": 3,
+      "TaskId": 2,
+      "Comment": "API modernization is progressing well.",
+      "UserCreate": 3,
+      "UserCreateName": "Jane Smith",
+      "UserMod": null,
+      "UserModName": null,
+      "CreationDate": "2026-03-03T09:00:00Z",
+      "ModificationDate": null,
+      "TaskTitle": "Update REST APIs"
+    }
+  ]
+}
+```
+
+---
+
+## Create Comment
+
+<Card title="POST /api/Comments" icon="plus">
+  Add a new comment to a task
+</Card>
+
+### Headers
+
+<ParamField header="Authorization" type="string" required>
+  Bearer token for authentication
+</ParamField>
+
+### Request Body
+
+<ParamField body="TaskId" type="integer" required>
+  The task ID to add the comment to
+</ParamField>
+
+<ParamField body="Comment" type="string" required>
+  The comment text content
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X POST https://api.example.com/api/Comments \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "TaskId": 1,
+    "Comment": "Updated the migration script to handle foreign key constraints properly."
+  }'
+```
+
+### Example Response
+
+<CodeGroup>
+```json 200 OK
+{
+  "Success": true,
+  "Message": "Comment created successfully",
+  "Data": {
+    "Id": 4,
+    "TaskId": 1,
+    "Comment": "Updated the migration script to handle foreign key constraints properly.",
+    "UserCreate": 5,
+    "UserCreateName": "John Doe",
+    "UserMod": null,
+    "UserModName": null,
+    "CreationDate": "2026-03-04T11:20:00Z",
+    "ModificationDate": null,
+    "TaskTitle": "Migrate database schema"
+  }
+}
+```
+
+```json 400 Bad Request
+{
+  "Success": false,
+  "Message": "Comment is required"
+}
+```
+
+```json 401 Unauthorized
+{
+  "Success": false,
+  "Message": "User not authenticated"
+}
+```
+</CodeGroup>
+
+### Status Codes
+
+- `200 OK` - Comment successfully created
+- `400 Bad Request` - Missing or empty comment text
+- `401 Unauthorized` - Missing or invalid authentication token
+
+---
+
+## Common Error Responses
+
+All comment endpoints may return the following error responses:
+
+### 401 Unauthorized
+
+```json
+{
+  "Success": false,
+  "Message": "User not authenticated"
+}
+```
+
+This error occurs when:
+- No authentication token is provided
+- The token is invalid or expired
+- The token doesn't contain a valid user ID (NameIdentifier claim)
+
+### 400 Bad Request
+
+```json
+{
+  "Success": false,
+  "Message": "Comment is required"
+}
+```
+
+This error occurs when:
+- The comment text is empty or contains only whitespace
+- Required fields are missing from the request body
+- The task ID is invalid
+
+---
+
+## Response Format
+
+All comment endpoints follow a consistent response format:
+
+<ResponseField name="Success" type="boolean">
+  Indicates whether the operation was successful
+</ResponseField>
+
+<ResponseField name="Message" type="string">
+  Human-readable message describing the result
+</ResponseField>
+
+<ResponseField name="Data" type="object | array | null">
+  The response payload (comment object, array of comments, or null on error)
+</ResponseField>
+
+---
+
+## Usage Notes
+
+<Tip>
+  **Best Practices:**
+  
+  - Comments are automatically associated with the authenticated user via JWT token
+  - The `UserCreate` field is automatically populated from the token's NameIdentifier claim
+  - Use `/api/Comments/task/{taskId}` to load comments when displaying task details
+  - Use `/api/Comments/all` for admin dashboards or comment moderation interfaces
+</Tip>
+
+<Warning>
+  **Limitations:**
+  
+  - There is currently no endpoint to update or delete comments
+  - All comments are permanent once created
+  - Consider implementing edit/delete functionality for better comment management
+</Warning>
+
+---
+
+## Usage Examples
+
+### Add Comment with JavaScript
+
+```javascript
+const addComment = async (taskId, commentText, token) => {
+  const response = await fetch('https://api.example.com/api/Comments', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      TaskId: taskId,
+      Comment: commentText
+    })
+  });
+  
+  const data = await response.json();
+  
+  if (data.Success) {
+    console.log('Comment added:', data.Data);
+  } else {
+    console.error('Error:', data.Message);
+  }
+  
+  return data;
+};
+```
+
+### Load Task Comments
+
+```javascript
+const loadComments = async (taskId, token) => {
+  const response = await fetch(
+    `https://api.example.com/api/Comments/task/${taskId}`,
+    {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    }
+  );
+  
+  const data = await response.json();
+  
+  if (data.Success) {
+    return data.Data; // Array of comments
+  }
+  
+  return [];
+};
+```
+
+---
+
+## Future Endpoints
+
+The following comment management endpoints are not currently implemented but may be added in future versions:
+
+- `PUT /api/Comments/{id}` - Update an existing comment
+- `DELETE /api/Comments/{id}` - Delete a comment
+- `GET /api/Comments/user/{userId}` - Get all comments by a specific user
+- `GET /api/Comments/search` - Search comments by text content

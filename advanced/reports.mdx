@@ -1,0 +1,373 @@
+---
+title: 'Reporting and Analytics'
+description: 'Generate comprehensive task reports and statistics with detailed analytics'
+icon: 'chart-bar'
+---
+
+## Overview
+
+The reporting system provides comprehensive analytics and insights into your tasks, projects, and team performance. Generate detailed reports filtered by state, project, or user assignment.
+
+## Task Statistics
+
+Get a quick overview of all task metrics with the statistics endpoint.
+
+### GET /api/tasks/statistics
+
+Returns aggregated statistics for all active tasks in the system.
+
+<CodeGroup>
+```bash cURL
+curl -X GET http://localhost:5000/api/tasks/statistics \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('/api/tasks/statistics', {
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+const data = await response.json();
+```
+</CodeGroup>
+
+### Response Structure
+
+<ResponseField name="success" type="boolean" required>
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="message" type="string" required>
+  Status message
+</ResponseField>
+
+<ResponseField name="data" type="object" required>
+  Statistics object containing task metrics
+  
+  <ResponseField name="total" type="integer">
+    Total number of active tasks
+  </ResponseField>
+  
+  <ResponseField name="completed" type="integer">
+    Number of tasks with completed state (StateId = 3)
+  </ResponseField>
+  
+  <ResponseField name="pending" type="integer">
+    Number of tasks with pending state (StateId = 1)
+  </ResponseField>
+  
+  <ResponseField name="highPriority" type="integer">
+    Number of tasks with high priority (PriorityId = 3)
+  </ResponseField>
+  
+  <ResponseField name="overdue" type="integer">
+    Number of incomplete tasks past their expiration date
+  </ResponseField>
+</ResponseField>
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "message": "Statistics retrieved successfully",
+  "data": {
+    "total": 45,
+    "completed": 12,
+    "pending": 18,
+    "highPriority": 8,
+    "overdue": 5
+  }
+}
+```
+
+<Info>
+  Statistics are calculated in real-time from active tasks only. Deleted (inactive) tasks are excluded from all metrics.
+</Info>
+
+---
+
+## Report Types
+
+Generate detailed reports grouped by different dimensions.
+
+<CardGroup cols={3}>
+  <Card title="By State" icon="list-check" href="#by-state-report">
+    Task distribution across different states
+  </Card>
+  <Card title="By Project" icon="folder" href="#by-project-report">
+    Tasks grouped by project assignment
+  </Card>
+  <Card title="By User" icon="user" href="#by-user-report">
+    Task workload per assigned user
+  </Card>
+</CardGroup>
+
+---
+
+## By-State Report
+
+Analyze task distribution across different workflow states.
+
+### GET /api/tasks/report/by-state
+
+Groups tasks by their current state and returns the count for each state.
+
+<CodeGroup>
+```bash cURL
+curl -X GET http://localhost:5000/api/tasks/report/by-state \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('/api/tasks/report/by-state', {
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+const report = await response.json();
+```
+</CodeGroup>
+
+### Response Format
+
+```json
+{
+  "success": true,
+  "message": "Task report by state retrieved successfully",
+  "data": [
+    {
+      "name": "Pending",
+      "count": 18
+    },
+    {
+      "name": "In Progress",
+      "count": 15
+    },
+    {
+      "name": "Completed",
+      "count": 12
+    }
+  ]
+}
+```
+
+<Note>
+  The report includes only active tasks. Results are ordered alphabetically by state name.
+</Note>
+
+---
+
+## By-Project Report
+
+View task distribution across different projects.
+
+### GET /api/tasks/report/by-project
+
+Groups tasks by their assigned project and returns the count for each project.
+
+<CodeGroup>
+```bash cURL
+curl -X GET http://localhost:5000/api/tasks/report/by-project \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('/api/tasks/report/by-project', {
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+const report = await response.json();
+```
+</CodeGroup>
+
+### Response Format
+
+```json
+{
+  "success": true,
+  "message": "Task report by project retrieved successfully",
+  "data": [
+    {
+      "name": "Legacy System Migration",
+      "count": 25
+    },
+    {
+      "name": "Mobile App Development",
+      "count": 12
+    },
+    {
+      "name": "Infrastructure Upgrade",
+      "count": 8
+    }
+  ]
+}
+```
+
+---
+
+## By-User Report
+
+Analyze workload distribution across team members.
+
+### GET /api/tasks/report/by-user
+
+Groups tasks by their assigned user and returns the count for each user.
+
+<CodeGroup>
+```bash cURL
+curl -X GET http://localhost:5000/api/tasks/report/by-user \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+const response = await fetch('/api/tasks/report/by-user', {
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+const report = await response.json();
+```
+</CodeGroup>
+
+### Response Format
+
+```json
+{
+  "success": true,
+  "message": "Task report by user retrieved successfully",
+  "data": [
+    {
+      "name": "john.doe",
+      "count": 15
+    },
+    {
+      "name": "jane.smith",
+      "count": 12
+    },
+    {
+      "name": "bob.wilson",
+      "count": 8
+    }
+  ]
+}
+```
+
+<Warning>
+  The user report only includes tasks that are currently assigned. Unassigned tasks are not reflected in this report.
+</Warning>
+
+---
+
+## Report Export
+
+The frontend ReportManager component provides CSV export functionality for all reports.
+
+### CSV Export Format
+
+Exports all three report types in a single CSV file:
+
+```csv
+REPORT: TASKS
+Pending: 18 tasks
+In Progress: 15 tasks
+Completed: 12 tasks
+
+REPORT: PROJECTS
+Legacy System Migration: 25 tasks
+Mobile App Development: 12 tasks
+Infrastructure Upgrade: 8 tasks
+
+REPORT: USERS
+john.doe: 15 assigned tasks
+jane.smith: 12 assigned tasks
+bob.wilson: 8 assigned tasks
+```
+
+### Frontend Implementation
+
+The report manager automatically loads all three report types in parallel:
+
+```javascript
+const [tasksRes, projectsRes, usersRes] = await Promise.all([
+  apiRequest('/tasks/report/by-state'),
+  apiRequest('/tasks/report/by-project'),
+  apiRequest('/tasks/report/by-user')
+]);
+```
+
+<Info>
+  Parallel loading improves performance by fetching all reports simultaneously rather than sequentially.
+</Info>
+
+---
+
+## Implementation Details
+
+### Backend Logic
+
+Reports are generated using LINQ queries with joins to related tables:
+
+**By-State Query** (TaskService.cs:427-460)
+```csharp
+var report = await (from t in _context.TblTasks
+                   join s in _context.TblStates on t.StateId equals s.Id
+                   where t.Active == true
+                   group t by new { s.Id, s.Name } into g
+                   orderby g.Key.Name
+                   select new {
+                       Name = g.Key.Name,
+                       Count = g.Count()
+                   }).ToListAsync();
+```
+
+**By-Project Query** (TaskService.cs:462-493)
+```csharp
+var report = await (from t in _context.TblTasks
+                   join p in _context.TblProjects on t.ProjectId equals p.Id
+                   where t.Active == true
+                   group t by new { p.Id, p.Name } into g
+                   orderby g.Key.Name
+                   select new {
+                       Name = g.Key.Name,
+                       Count = g.Count()
+                   }).ToListAsync();
+```
+
+**By-User Query** (TaskService.cs:495-526)
+```csharp
+var report = await (from t in _context.TblTasks
+                   join u in _context.TblUsers on t.AsignedId equals u.Id
+                   where t.Active == true
+                   group t by new { u.Id, u.Username } into g
+                   orderby g.Key.Username
+                   select new {
+                       Name = g.Key.Username,
+                       Count = g.Count()
+                   }).ToListAsync();
+```
+
+---
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Regular Monitoring" icon="clock">
+    Schedule regular report generation to track team performance and project progress over time.
+  </Card>
+  <Card title="Balanced Workload" icon="scale-balanced">
+    Use by-user reports to ensure tasks are distributed evenly across team members.
+  </Card>
+  <Card title="State Analysis" icon="chart-line">
+    Monitor state distribution to identify bottlenecks in your workflow.
+  </Card>
+  <Card title="Project Tracking" icon="bullseye">
+    Use by-project reports to prioritize resources for high-task-count projects.
+  </Card>
+</CardGroup>

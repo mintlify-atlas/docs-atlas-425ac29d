@@ -1,0 +1,362 @@
+---
+title: 'Configuration'
+description: 'Configuration options and environment variables for the Legacy Migration Task Manager'
+---
+
+## Overview
+
+The application configuration is managed through `appsettings.json` and environment variables. Environment variables take precedence over configuration files, making it easy to deploy across different environments.
+
+## Database Configuration
+
+### Connection String
+
+The database connection is configured using PostgreSQL connection strings. The application checks for the connection in this order:
+
+1. `ConnectionStrings:ProjectTemplateConnection` in `appsettings.json`
+2. `DATABASE_URL` in configuration
+3. `DATABASE_URL` environment variable
+
+See `Program.cs:25-34` for the connection string resolution logic.
+
+### Connection String Formats
+
+<CodeGroup>
+```bash Standard Format
+Host=localhost;Database=project_template_scharp;Username=postgres;Password=yourpassword
+```
+
+```bash With Port
+Host=localhost;Port=5432;Database=project_template_scharp;Username=postgres;Password=yourpassword
+```
+
+```bash Production (SSL)
+Host=your-db-host.com;Database=project_template_scharp;Username=your-user;Password=your-password;SslMode=Require
+```
+
+```bash Railway Format
+postgresql://user:password@host:port/database
+```
+</CodeGroup>
+
+<Warning>
+The application will throw an `InvalidOperationException` if no database connection string is configured. Ensure `DATABASE_URL` is always set.
+</Warning>
+
+### Connection Resilience
+
+The application is configured with connection resilience settings in `Program.cs:36-43`:
+
+- **Max Retry Count**: 3 attempts
+- **Max Retry Delay**: 10 seconds between retries
+- **Command Timeout**: 30 seconds
+- **Provider**: Npgsql.EntityFrameworkCore.PostgreSQL
+
+```csharp
+options.UseNpgsql(connectionString, npgsqlOptions =>
+{
+    npgsqlOptions.EnableRetryOnFailure(
+        maxRetryCount: 3,
+        maxRetryDelay: TimeSpan.FromSeconds(10),
+        errorCodesToAdd: null);
+    npgsqlOptions.CommandTimeout(30);
+});
+```
+
+## JWT Authentication
+
+### JWT Configuration
+
+The application uses JWT Bearer authentication for secure API access. Configuration is defined in `Program.cs:54-72`.
+
+#### Environment Variables
+
+| Variable | Description | Default Value | Required |
+|----------|-------------|---------------|----------|
+| `JWT_KEY` | Secret key for signing JWT tokens | `DefaultJwtSecretKeyForDevelopmentPurposesOnly2024!` | Yes (Production) |
+| `JWT_ISSUER` | Token issuer identifier | `TemplateAPI` | No |
+| `JWT_AUDIENCE` | Token audience identifier | `TemplateAPI` | No |
+
+<CodeGroup>
+```bash Environment Variables
+export JWT_KEY="YourSecureJwtSecretKeyHere_MinimumLength32Characters!"
+export JWT_ISSUER="TemplateAPI"
+export JWT_AUDIENCE="TemplateAPI"
+```
+
+```json appsettings.json
+{
+  "Jwt": {
+    "Key": "YourSecureJwtSecretKeyHere_MinimumLength32Characters!",
+    "Issuer": "TemplateAPI",
+    "Audience": "TemplateAPI"
+  }
+}
+```
+</CodeGroup>
+
+<Warning>
+**Production Security:**
+- Never use the default JWT key in production
+- Generate a strong, random key of at least 32 characters
+- Keep the JWT key secret and never commit it to version control
+- Rotate keys periodically for enhanced security
+</Warning>
+
+### Token Validation Parameters
+
+The application validates JWT tokens with the following parameters:
+
+- **ValidateIssuer**: `true` - Verifies the token issuer
+- **ValidateAudience**: `true` - Verifies the token audience
+- **ValidateIssuerSigningKey**: `true` - Verifies the signature
+- **ValidIssuer**: Configured via `JWT_ISSUER`
+- **ValidAudience**: Configured via `JWT_AUDIENCE`
+- **IssuerSigningKey**: Derived from `JWT_KEY`
+
+## CORS Configuration
+
+### CORS Policy
+
+The application uses a CORS policy named `AllowFrontend` configured in `Program.cs:15-23`:
+
+```csharp
+options.AddPolicy("AllowFrontend", policy =>
+{
+    policy.AllowAnyOrigin()
+        .AllowAnyMethod()
+        .AllowAnyHeader();
+});
+```
+
+<Info>
+**Current Configuration:**
+- Allows requests from any origin
+- Allows all HTTP methods (GET, POST, PUT, DELETE, etc.)
+- Allows all headers
+</Info>
+
+<Warning>
+**Production Recommendation:**
+For production environments, restrict CORS to specific origins:
+
+```csharp
+policy.WithOrigins("https://yourdomain.com", "https://www.yourdomain.com")
+    .AllowAnyMethod()
+    .AllowAnyHeader();
+```
+</Warning>
+
+## ASP.NET Core Configuration
+
+### Core Environment Variables
+
+| Variable | Description | Default | Values |
+|----------|-------------|---------|--------|
+| `ASPNETCORE_ENVIRONMENT` | Application environment | `Production` | `Development`, `Staging`, `Production` |
+| `ASPNETCORE_URLS` | URLs the app listens on | `http://localhost:5000` | Any valid URL(s) |
+
+<CodeGroup>
+```bash Development
+export ASPNETCORE_ENVIRONMENT="Development"
+export ASPNETCORE_URLS="http://localhost:5000;https://localhost:5001"
+```
+
+```bash Production
+export ASPNETCORE_ENVIRONMENT="Production"
+export ASPNETCORE_URLS="http://+:8080"
+```
+
+```bash Docker
+ASPNETCORE_ENVIRONMENT=Production
+ASPNETCORE_URLS=http://+:8080
+```
+</CodeGroup>
+
+### Environment-Specific Features
+
+#### Development Environment
+
+When `ASPNETCORE_ENVIRONMENT=Development`:
+
+- OpenAPI/Swagger endpoint is enabled at `/openapi/v1.json`
+- Swagger UI may be available (if configured)
+- Detailed error pages are shown
+- HTTPS redirection may be disabled
+
+#### Production Environment
+
+When `ASPNETCORE_ENVIRONMENT=Production`:
+
+- OpenAPI endpoints are disabled
+- Generic error pages are shown
+- HTTPS redirection is enforced
+- Static file serving is optimized
+
+## Application Services
+
+### Registered Services
+
+The following services are registered in the dependency injection container (`Program.cs:46-51`):
+
+| Interface | Implementation | Scope |
+|-----------|----------------|-------|
+| `IUsersService` | `UsersService` | Scoped |
+| `ITaskService` | `TaskService` | Scoped |
+| `IProjectService` | `ProjectService` | Scoped |
+| `ICommentService` | `CommentService` | Scoped |
+| `IHistoryService` | `HistoryService` | Scoped |
+| `INotificationService` | `NotificationService` | Scoped |
+| `JwtTokenService` | `JwtTokenService` | Singleton |
+
+### Service Lifetimes
+
+- **Scoped**: New instance per HTTP request (most services)
+- **Singleton**: Single instance for the application lifetime (`JwtTokenService`)
+
+## Complete Environment Variables Reference
+
+### All Environment Variables
+
+<CodeGroup>
+```bash Development
+# Database
+DATABASE_URL="Host=localhost;Database=project_template_scharp;Username=postgres;Password=yourpassword"
+
+# JWT Authentication
+JWT_KEY="DefaultJwtSecretKeyForDevelopmentPurposesOnly2024!"
+JWT_ISSUER="TemplateAPI"
+JWT_AUDIENCE="TemplateAPI"
+
+# ASP.NET Core
+ASPNETCORE_ENVIRONMENT="Development"
+ASPNETCORE_URLS="http://localhost:5000;https://localhost:5001"
+```
+
+```bash Production
+# Database
+DATABASE_URL="Host=prod-db.example.com;Database=project_template_scharp;Username=prod_user;Password=secure_password;SslMode=Require"
+
+# JWT Authentication
+JWT_KEY="ProductionSecureRandomJwtKey_ChangeThisToALongRandomString!"
+JWT_ISSUER="TemplateAPI"
+JWT_AUDIENCE="TemplateAPI"
+
+# ASP.NET Core
+ASPNETCORE_ENVIRONMENT="Production"
+ASPNETCORE_URLS="http://+:8080"
+```
+
+```bash Railway Deployment
+# Database (Railway provides this automatically)
+DATABASE_URL="postgresql://user:password@host:port/database"
+
+# JWT Authentication (Add these in Railway)
+JWT_KEY="YourSecureProductionJwtKey"
+JWT_ISSUER="TemplateAPI"
+JWT_AUDIENCE="TemplateAPI"
+
+# ASP.NET Core (Railway default)
+ASPNETCORE_URLS="http://+:8080"
+```
+</CodeGroup>
+
+## Configuration File Structure
+
+### appsettings.json
+
+```json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "ConnectionStrings": {
+    "ProjectTemplateConnection": "Host=localhost;Database=project_template_scharp;Username=postgres;Password=yourpassword"
+  },
+  "Jwt": {
+    "Key": "YourSecureJwtSecretKeyHere",
+    "Issuer": "TemplateAPI",
+    "Audience": "TemplateAPI"
+  }
+}
+```
+
+### appsettings.Development.json
+
+```json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug",
+      "Microsoft.AspNetCore": "Information"
+    }
+  },
+  "Jwt": {
+    "Key": "DefaultJwtSecretKeyForDevelopmentPurposesOnly2024!"
+  }
+}
+```
+
+<Info>
+Environment-specific configuration files (like `appsettings.Development.json`) override settings from `appsettings.json` when running in that environment.
+</Info>
+
+## Static Files and Frontend
+
+### Configuration
+
+The application serves static files from the `wwwroot` directory (`Program.cs:82-84`):
+
+```csharp
+app.UseDefaultFiles();   // Search index.html
+app.UseStaticFiles();    // Load wwwroot
+```
+
+### Fallback Routing
+
+All unmatched routes fall back to `index.html` for client-side routing (`Program.cs:102`):
+
+```csharp
+app.MapFallbackToFile("index.html");
+```
+
+This enables React Router to handle frontend routing.
+
+## Best Practices
+
+<Steps>
+  <Step title="Use Environment Variables for Secrets">
+    Never store sensitive data (database passwords, JWT keys) in `appsettings.json`. Use environment variables or secret management services.
+  </Step>
+
+  <Step title="Separate Configuration by Environment">
+    Use `appsettings.Development.json` and `appsettings.Production.json` for environment-specific settings.
+  </Step>
+
+  <Step title="Validate Configuration on Startup">
+    The application validates critical configuration (database connection, JWT key) on startup and throws exceptions if missing.
+  </Step>
+
+  <Step title="Use Strong JWT Keys">
+    Generate cryptographically secure random strings for JWT keys in production (minimum 32 characters).
+  </Step>
+
+  <Step title="Enable SSL for Database Connections">
+    Always use `SslMode=Require` in production database connection strings.
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Setup Guide" icon="rocket" href="/deployment/setup">
+    Complete setup instructions for local development
+  </Card>
+  <Card title="Docker Deployment" icon="docker" href="/deployment/docker">
+    Deploy using Docker containers
+  </Card>
+</CardGroup>

@@ -1,0 +1,438 @@
+---
+title: 'Projects'
+description: 'Project management endpoints for creating, updating, and organizing projects'
+---
+
+<Note>
+  All endpoints require authentication. Include the JWT token in the `Authorization` header.
+</Note>
+
+## Get All Projects
+
+<Card title="GET /api/Projects" icon="folder-open">
+  Retrieve all projects in the system
+</Card>
+
+### Headers
+
+<ParamField header="Authorization" type="string" required>
+  Bearer token for authentication
+</ParamField>
+
+### Response
+
+<ResponseField name="Success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="Message" type="string">
+  Response message
+</ResponseField>
+
+<ResponseField name="Data" type="array">
+  Array of project objects
+  <Expandable title="Project object">
+    <ResponseField name="Id" type="integer">
+      Project ID
+    </ResponseField>
+    <ResponseField name="Name" type="string">
+      Project name
+    </ResponseField>
+    <ResponseField name="Description" type="string">
+      Project description
+    </ResponseField>
+    <ResponseField name="Usercreate" type="integer">
+      User ID who created the project
+    </ResponseField>
+    <ResponseField name="Usermod" type="integer">
+      User ID who last modified the project
+    </ResponseField>
+    <ResponseField name="CreationDate" type="string">
+      Creation date (ISO 8601 format)
+    </ResponseField>
+    <ResponseField name="ModificationDate" type="string">
+      Last modification date (ISO 8601 format)
+    </ResponseField>
+    <ResponseField name="Active" type="boolean">
+      Whether the project is active
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example Request
+
+```bash
+curl -X GET https://api.example.com/api/Projects \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Example Response
+
+```json 200 OK
+{
+  "Success": true,
+  "Message": "Projects retrieved successfully",
+  "Data": [
+    {
+      "Id": 1,
+      "Name": "Legacy Migration",
+      "Description": "Migrating legacy system to modern architecture",
+      "Usercreate": 1,
+      "Usermod": 3,
+      "CreationDate": "2026-01-15T10:00:00Z",
+      "ModificationDate": "2026-03-01T14:30:00Z",
+      "Active": true
+    },
+    {
+      "Id": 2,
+      "Name": "API Modernization",
+      "Description": "Updating REST APIs to GraphQL",
+      "Usercreate": 2,
+      "Usermod": null,
+      "CreationDate": "2026-02-01T09:00:00Z",
+      "ModificationDate": null,
+      "Active": true
+    }
+  ]
+}
+```
+
+---
+
+## Get Project By ID
+
+<Card title="GET /api/Projects/{id}" icon="folder">
+  Retrieve a specific project by ID
+</Card>
+
+### Path Parameters
+
+<ParamField path="id" type="integer" required>
+  The project ID
+</ParamField>
+
+### Headers
+
+<ParamField header="Authorization" type="string" required>
+  Bearer token for authentication
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET https://api.example.com/api/Projects/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Example Response
+
+<CodeGroup>
+```json 200 OK
+{
+  "Success": true,
+  "Message": "Project retrieved successfully",
+  "Data": {
+    "Id": 1,
+    "Name": "Legacy Migration",
+    "Description": "Migrating legacy system to modern architecture",
+    "Usercreate": 1,
+    "Usermod": 3,
+    "CreationDate": "2026-01-15T10:00:00Z",
+    "ModificationDate": "2026-03-01T14:30:00Z",
+    "Active": true
+  }
+}
+```
+
+```json 404 Not Found
+{
+  "Success": false,
+  "Message": "Project not found",
+  "Data": null
+}
+```
+</CodeGroup>
+
+---
+
+## Create Project
+
+<Card title="POST /api/Projects" icon="plus">
+  Create a new project
+</Card>
+
+### Headers
+
+<ParamField header="Authorization" type="string" required>
+  Bearer token for authentication
+</ParamField>
+
+### Request Body
+
+<ParamField body="Name" type="string" required>
+  Project name
+</ParamField>
+
+<ParamField body="Description" type="string">
+  Project description (optional)
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X POST https://api.example.com/api/Projects \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "Name": "Database Upgrade",
+    "Description": "Upgrading database to latest version with performance optimizations"
+  }'
+```
+
+### Example Response
+
+<CodeGroup>
+```json 201 Created
+{
+  "Success": true,
+  "Message": "Project created successfully",
+  "Data": {
+    "Id": 3,
+    "Name": "Database Upgrade",
+    "Description": "Upgrading database to latest version with performance optimizations",
+    "Usercreate": 1,
+    "Usermod": null,
+    "CreationDate": "2026-03-04T10:00:00Z",
+    "ModificationDate": null,
+    "Active": true
+  }
+}
+```
+
+```json 400 Bad Request
+{
+  "Success": false,
+  "Message": "Invalid project data",
+  "Data": null
+}
+```
+
+```json 401 Unauthorized
+"Usuario no válido"
+```
+</CodeGroup>
+
+### Status Codes
+
+- `201 Created` - Project successfully created
+- `400 Bad Request` - Invalid request data or validation error
+- `401 Unauthorized` - Missing or invalid authentication token
+
+---
+
+## Update Project
+
+<Card title="PUT /api/Projects" icon="pen">
+  Update an existing project
+</Card>
+
+### Headers
+
+<ParamField header="Authorization" type="string" required>
+  Bearer token for authentication
+</ParamField>
+
+### Request Body
+
+<ParamField body="Id" type="integer" required>
+  Project ID to update
+</ParamField>
+
+<ParamField body="Name" type="string" required>
+  Project name
+</ParamField>
+
+<ParamField body="Description" type="string">
+  Project description (optional)
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X PUT https://api.example.com/api/Projects \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "Id": 1,
+    "Name": "Legacy Migration (Updated)",
+    "Description": "Migrating legacy system to modern microservices architecture"
+  }'
+```
+
+### Example Response
+
+<CodeGroup>
+```json 200 OK
+{
+  "Success": true,
+  "Message": "Project updated successfully",
+  "Data": {
+    "Id": 1,
+    "Name": "Legacy Migration (Updated)",
+    "Description": "Migrating legacy system to modern microservices architecture",
+    "Usercreate": 1,
+    "Usermod": 1,
+    "CreationDate": "2026-01-15T10:00:00Z",
+    "ModificationDate": "2026-03-04T16:00:00Z",
+    "Active": true
+  }
+}
+```
+
+```json 400 Bad Request
+{
+  "Success": false,
+  "Message": "Invalid project data",
+  "Data": null
+}
+```
+
+```json 401 Unauthorized
+"Usuario no válido"
+```
+</CodeGroup>
+
+### Status Codes
+
+- `200 OK` - Project successfully updated
+- `400 Bad Request` - Invalid request data or validation error
+- `401 Unauthorized` - Missing or invalid authentication token
+
+---
+
+## Delete Project
+
+<Card title="DELETE /api/Projects/{id}" icon="trash">
+  Delete a project (soft delete - marks as inactive)
+</Card>
+
+### Path Parameters
+
+<ParamField path="id" type="integer" required>
+  The project ID to delete
+</ParamField>
+
+### Headers
+
+<ParamField header="Authorization" type="string" required>
+  Bearer token for authentication
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X DELETE https://api.example.com/api/Projects/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Example Response
+
+<CodeGroup>
+```json 200 OK
+{
+  "Success": true,
+  "Message": "Project deleted successfully",
+  "Data": null
+}
+```
+
+```json 404 Not Found
+{
+  "Success": false,
+  "Message": "Project not found",
+  "Data": null
+}
+```
+
+```json 401 Unauthorized
+"Usuario no válido"
+```
+</CodeGroup>
+
+### Status Codes
+
+- `200 OK` - Project successfully deleted
+- `401 Unauthorized` - Missing or invalid authentication token
+- `404 Not Found` - Project with specified ID doesn't exist
+
+<Warning>
+  This endpoint performs a soft delete by marking the project as inactive (`Active = false`). The project data remains in the database but won't appear in standard queries.
+</Warning>
+
+---
+
+## Common Error Responses
+
+All project endpoints may return the following error responses:
+
+### 401 Unauthorized
+
+```json
+"Usuario no válido"
+```
+
+This error occurs when:
+- No authentication token is provided
+- The token is invalid or expired
+- The token doesn't contain a valid user ID
+
+### 400 Bad Request
+
+```json
+{
+  "Success": false,
+  "Message": "Validation error message",
+  "Data": null
+}
+```
+
+This error occurs when:
+- Required fields are missing
+- Field values don't meet validation requirements
+- The request body format is invalid
+
+### 404 Not Found
+
+```json
+{
+  "Success": false,
+  "Message": "Project not found",
+  "Data": null
+}
+```
+
+This error occurs when:
+- The specified project ID doesn't exist
+- The project is marked as inactive
+
+---
+
+## Response Format
+
+All project endpoints follow a consistent response format:
+
+<ResponseField name="Success" type="boolean">
+  Indicates whether the operation was successful
+</ResponseField>
+
+<ResponseField name="Message" type="string">
+  Human-readable message describing the result
+</ResponseField>
+
+<ResponseField name="Data" type="object | array | null">
+  The response payload (project object, array of projects, or null for delete operations)
+</ResponseField>
+
+<Tip>
+  When creating or updating projects, the authenticated user ID is automatically extracted from the JWT token and used to populate the `Usercreate` and `Usermod` fields.
+</Tip>

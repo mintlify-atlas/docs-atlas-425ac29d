@@ -1,80 +1,343 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart
+description: Get the Legacy Migration Task Manager up and running in minutes with this step-by-step guide
 ---
 
-## Get started in three steps
+## Prerequisites
 
-Get your documentation site running locally and make your first customization.
+Before you begin, ensure you have the following installed:
 
-### Step 1: Set up your local environment
+- **.NET 10 SDK** - [Download here](https://dotnet.microsoft.com/download)
+- **Node.js** (v18 or higher) - [Download here](https://nodejs.org/)
+- **PostgreSQL** (v14 or higher) - [Download here](https://www.postgresql.org/download/)
+- **Git** - [Download here](https://git-scm.com/downloads)
+
+<Note>
+The backend previously supported SQL Server but has been migrated to PostgreSQL for better deployment compatibility on platforms like Railway.
+</Note>
+
+## Installation
+
+<Steps>
+  <Step title="Clone the repository">
+    Get the source code from your repository:
+
+    ```bash
+    git clone <your-repository-url>
+    cd legacy-migration-task-manager
+    ```
+  </Step>
+
+  <Step title="Set up the database">
+    Create a PostgreSQL database for the application:
+
+    ```bash
+    # Connect to PostgreSQL
+    psql -U postgres
+
+    # Create the database
+    CREATE DATABASE project_template_scharp;
+
+    # Exit psql
+    \q
+    ```
+
+    <Info>
+    The application will automatically create tables using Entity Framework migrations when it first runs.
+    </Info>
+  </Step>
+
+  <Step title="Configure the backend">
+    Set up your database connection string. You can do this in two ways:
+
+    **Option 1: Environment variable (recommended)**
+
+    ```bash
+    # Linux/macOS
+    export DATABASE_URL="Host=localhost;Database=project_template_scharp;Username=postgres;Password=your_password"
+
+    # Windows (PowerShell)
+    $env:DATABASE_URL="Host=localhost;Database=project_template_scharp;Username=postgres;Password=your_password"
+    ```
+
+    **Option 2: Create appsettings.json**
+
+    Create `source/backend/appsettings.json`:
+
+    ```json
+    {
+      "ConnectionStrings": {
+        "ProjectTemplateConnection": "Host=localhost;Database=project_template_scharp;Username=postgres;Password=your_password"
+      },
+      "Jwt": {
+        "Key": "YourSecretKeyHere_MinimumLength32Characters!",
+        "Issuer": "TemplateAPI",
+        "Audience": "TemplateAPI"
+      },
+      "Logging": {
+        "LogLevel": {
+          "Default": "Information",
+          "Microsoft.AspNetCore": "Warning"
+        }
+      },
+      "AllowedHosts": "*"
+    }
+    ```
+
+    <Note>
+    The application checks for connection strings in this order:
+    1. `ConnectionStrings:ProjectTemplateConnection` in appsettings.json
+    2. `DATABASE_URL` in configuration
+    3. `DATABASE_URL` environment variable
+    </Note>
+  </Step>
+
+  <Step title="Install backend dependencies">
+    Navigate to the backend directory and restore NuGet packages:
+
+    ```bash
+    cd source/backend
+    dotnet restore
+    ```
+  </Step>
+
+  <Step title="Apply database migrations">
+    Initialize the database schema with Entity Framework:
+
+    ```bash
+    dotnet ef database update
+    ```
+
+    This creates all necessary tables, including:
+    - `tbl_users` - User accounts
+    - `tbl_tasks` - Task records
+    - `tbl_projects` - Project organization
+    - `tbl_states` - Task states (Pending, In Progress, Completed)
+    - `tbl_priorities` - Priority levels
+    - `tbl_comments` - Task comments
+    - `tbl_history` - Audit trail
+    - `tbl_notifications` - User notifications
+  </Step>
+
+  <Step title="Start the backend server">
+    Run the .NET API server:
+
+    ```bash
+    dotnet run
+    ```
+
+    Or with hot reload for development:
+
+    ```bash
+    dotnet watch run
+    ```
+
+    The backend will start at `https://localhost:7067`
+
+    <Info>
+    Access the OpenAPI documentation at: `https://localhost:7067/swagger/index.html` (development mode only)
+    </Info>
+  </Step>
+
+  <Step title="Install frontend dependencies">
+    Open a new terminal and navigate to the frontend directory:
+
+    ```bash
+    cd source
+    npm install
+    ```
+
+    This installs all required packages including:
+    - React 19
+    - React Router DOM
+    - Tailwind CSS 4
+    - Webpack and build tools
+  </Step>
+
+  <Step title="Start the frontend">
+    Start the React development server:
+
+    ```bash
+    npm run dev
+    ```
+
+    Or just start without opening browser:
+
+    ```bash
+    npm start
+    ```
+
+    The frontend will start at `http://localhost:8080`
+  </Step>
+
+  <Step title="Access the application">
+    Open your browser and navigate to:
+
+    ```
+    http://localhost:8080
+    ```
+
+    You'll be redirected to the login page.
+  </Step>
+</Steps>
+
+## First login
+
+<Note>
+You'll need to create a user account in the database first, or use seed data if available. The application uses password comparison without hashing for this educational project.
+</Note>
+
+To create a test user, connect to your database and run:
+
+```sql
+INSERT INTO tbl_users (username, password, active, usercreate, creation_date)
+VALUES ('admin', 'admin123', true, 1, NOW());
+```
+
+Then log in with:
+- **Username**: `admin`
+- **Password**: `admin123`
+
+<Info>
+Upon successful login, you'll receive a JWT token that's automatically stored and used for subsequent API requests.
+</Info>
+
+## Verify the installation
+
+After logging in, you should see the main task manager interface with:
+
+1. **Navigation sidebar** - Access different modules (Tasks, Projects, Comments, etc.)
+2. **Task list** - View and manage tasks
+3. **Statistics** - See task counts and status breakdowns
+
+## Project structure
+
+Here's what the codebase looks like:
+
+```
+source/
+├── backend/                    # .NET 10 API
+│   ├── Controllers/           # HTTP endpoint handlers
+│   │   ├── AuthController.cs
+│   │   ├── TasksController.cs
+│   │   ├── ProjectsController.cs
+│   │   └── ...
+│   ├── Models/                # Entity Framework models
+│   │   ├── TblTask.cs
+│   │   ├── TblUsers.cs
+│   │   └── ...
+│   ├── Services/              # Business logic layer
+│   │   ├── TaskService.cs
+│   │   ├── UsersService.cs
+│   │   └── ...
+│   ├── Interfaces/            # Service contracts
+│   ├── DTOs/                  # Data transfer objects
+│   └── Program.cs             # Application configuration
+├── src/                       # React frontend
+│   ├── components/           # Reusable UI components
+│   ├── pages/                # Route-level components
+│   │   ├── Login.jsx
+│   │   ├── TaskManager.jsx
+│   │   └── ...
+│   └── App.jsx               # Main application component
+├── package.json              # Frontend dependencies
+└── webpack.config.js         # Build configuration
+```
+
+## Development workflow
+
+### Backend development
+
+The backend uses hot reload with `dotnet watch run`. Any changes to C# files will automatically rebuild and restart the server.
+
+```bash
+cd source/backend
+dotnet watch run
+```
+
+### Frontend development
+
+Webpack dev server provides hot module replacement:
+
+```bash
+cd source
+npm run dev
+```
+
+### Building for production
+
+<CodeGroup>
+```bash Backend
+cd source/backend
+dotnet publish -c Release
+```
+
+```bash Frontend
+cd source
+npm run build
+```
+</CodeGroup>
+
+The frontend build outputs to `dist/` and can be copied to the backend's `wwwroot/` folder for unified deployment.
+
+## Troubleshooting
 
 <AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
+  <Accordion title="Database connection failed">
+    **Error**: `Database connection string is not configured`
+
+    **Solution**: Ensure you've set the `DATABASE_URL` environment variable or created `appsettings.json` with the correct connection string.
+
+    Verify PostgreSQL is running:
+    ```bash
+    # Check PostgreSQL status
+    sudo systemctl status postgresql  # Linux
+    brew services list                # macOS
+    ```
   </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
+
+  <Accordion title="Port already in use">
+    **Error**: `Address already in use`
+
+    **Solution**: Another process is using port 7067 (backend) or 8080 (frontend).
+
+    Find and kill the process:
+    ```bash
+    # Find process using port
+    lsof -i :7067  # macOS/Linux
+    netstat -ano | findstr :7067  # Windows
+
+    # Kill the process
+    kill -9 <PID>
+    ```
+  </Accordion>
+
+  <Accordion title="CORS errors in browser">
+    **Error**: `Access to fetch at 'https://localhost:7067' has been blocked by CORS policy`
+
+    **Solution**: Ensure the backend CORS policy is configured correctly. Check `Program.cs:15-23` - the `AllowFrontend` policy should allow your frontend origin.
+
+    The current configuration allows all origins in development.
+  </Accordion>
+
+  <Accordion title="JWT authentication failing">
+    **Error**: `Unauthorized` responses from API
+
+    **Solution**: 
+    1. Ensure you've logged in and received a token
+    2. Check that the token is being sent in the `Authorization` header
+    3. Verify the JWT secret key is at least 32 characters
+    4. Check token expiration settings
   </Accordion>
 </AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
-
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Architecture deep dive" icon="building" href="/architecture">
+    Learn how the MVC pattern is implemented
+  </Card>
+  <Card title="API reference" icon="code" href="/api/authentication">
+    Explore available endpoints and data models
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

@@ -1,0 +1,424 @@
+---
+title: "User Management"
+description: "Guide to user accounts, roles, permissions, and account management"
+---
+
+## Overview
+
+The User Management system handles user accounts for the Legacy Migration Task Manager. Users can be created, authenticated, and assigned to tasks.
+
+## User Data Structure
+
+The `TblUsers` model represents a user account:
+
+<ParamField path="id" type="integer">
+  Unique user identifier (auto-generated)
+</ParamField>
+
+<ParamField path="username" type="string" required>
+  Unique username for login (required)
+</ParamField>
+
+<ParamField path="password" type="string" required>
+  Hashed password (required, minimum 8 characters)
+</ParamField>
+
+<ParamField path="creationDate" type="DateTime">
+  Timestamp when user account was created
+</ParamField>
+
+<ParamField path="active" type="boolean">
+  Whether the user account is active
+</ParamField>
+
+## API Endpoints
+
+### Get All Users
+
+Retrieves all users in the system.
+
+```http
+GET /api/users
+Authorization: Bearer {token}
+```
+
+<CodeGroup>
+```javascript React Frontend
+const getUsers = async () => {
+  const response = await fetch('/api/users', {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  
+  const result = await response.json();
+  if (result.success) {
+    console.log('Users:', result.data);
+  }
+};
+```
+
+```json Response
+{
+  "success": true,
+  "message": "Users retrieved successfully.",
+  "data": [
+    {
+      "id": 1,
+      "username": "admin",
+      "creationDate": "2026-01-01T00:00:00",
+      "active": true
+    },
+    {
+      "id": 2,
+      "username": "john_doe",
+      "creationDate": "2026-01-15T10:30:00",
+      "active": true
+    }
+  ]
+}
+```
+</CodeGroup>
+
+<Note>
+Password fields are never returned in API responses for security reasons.
+</Note>
+
+### Get Active Users (for Task Assignment)
+
+This endpoint is available through the Tasks controller for populating assignment dropdowns.
+
+```http
+GET /api/tasks/users
+Authorization: Bearer {token}
+```
+
+<CodeGroup>
+```javascript React Frontend
+const loadUsers = async () => {
+  const response = await fetch('/api/tasks/users', {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  
+  const result = await response.json();
+  if (result.success) {
+    setUsers(result.data || []);
+  }
+};
+```
+
+```json Response
+{
+  "success": true,
+  "message": "Users retrieved successfully",
+  "data": [
+    { "id": 1, "username": "admin" },
+    { "id": 2, "username": "john_doe" },
+    { "id": 3, "username": "jane_smith" }
+  ]
+}
+```
+</CodeGroup>
+
+This simplified response format only includes `id` and `username` fields, which is perfect for dropdown menus and task assignment.
+
+### Create User
+
+Creates a new user account.
+
+```http
+POST /api/users/create
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+<CodeGroup>
+```javascript React Frontend
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  // Validate password
+  if (formData.password.length < 8) {
+    showNotification('Password must be at least 8 characters', 'error');
+    return;
+  }
+  
+  // Validate password confirmation
+  if (formData.password !== formData.confirmPassword) {
+    showNotification('Passwords do not match', 'error');
+    return;
+  }
+  
+  const response = await fetch('/api/users/create', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      username: formData.username,
+      password: formData.password
+    })
+  });
+
+  const data = await response.json();
+  if (data.success) {
+    showNotification('User created successfully', 'success');
+  }
+};
+```
+
+```json Request Body
+{
+  "username": "new_user",
+  "password": "SecurePass123!"
+}
+```
+
+```json Success Response
+{
+  "success": true,
+  "message": "User created successfully",
+  "data": {
+    "id": 5,
+    "username": "new_user",
+    "creationDate": "2026-03-04T10:00:00",
+    "active": true
+  }
+}
+```
+
+```json Error Response
+{
+  "success": false,
+  "message": "Username already exists",
+  "data": null
+}
+```
+</CodeGroup>
+
+<Warning>
+Passwords must be at least 8 characters long. The password is hashed before storage using secure hashing algorithms.
+</Warning>
+
+## Authentication
+
+### Login
+
+Authenticate a user and receive a JWT token.
+
+```http
+POST /api/auth/login
+Content-Type: application/json
+```
+
+<CodeGroup>
+```javascript React Frontend
+const handleLogin = async (username, password) => {
+  const response = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ username, password })
+  });
+  
+  const result = await response.json();
+  if (result.success) {
+    // Store token for subsequent requests
+    localStorage.setItem('token', result.data.token);
+    console.log('User ID:', result.data.userId);
+  }
+};
+```
+
+```json Request Body
+{
+  "username": "john_doe",
+  "password": "SecurePass123!"
+}
+```
+
+```json Response
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "userId": 2,
+    "username": "john_doe"
+  }
+}
+```
+</CodeGroup>
+
+### Using the Token
+
+All protected endpoints require the JWT token in the Authorization header:
+
+```javascript
+const apiRequest = async (url, options = {}) => {
+  const response = await fetch(`/api${url}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      ...options.headers
+    },
+    ...options
+  });
+  
+  return await response.json();
+};
+```
+
+## User Roles and Permissions
+
+The current system implements a basic authentication model. All authenticated users have the same permissions:
+
+- View all tasks, projects, and users
+- Create and edit tasks
+- Create and edit projects
+- Add comments to tasks
+- View notifications
+- Create new users (if authenticated)
+
+<Note>
+Future versions may implement role-based access control (RBAC) with Admin, Manager, and User roles.
+</Note>
+
+## Frontend Implementation
+
+The User Manager is implemented in `src/pages/UserManager.jsx`.
+
+### User Creation Form
+
+```javascript
+const UserManager = () => {
+  const [formData, setFormData] = useState({
+    username: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const { token } = useAuth();
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        type="text"
+        name="username"
+        value={formData.username}
+        onChange={handleInputChange}
+        placeholder="Enter username"
+      />
+      
+      <input
+        type="password"
+        name="password"
+        value={formData.password}
+        onChange={handleInputChange}
+        placeholder="Enter password"
+      />
+      
+      <input
+        type="password"
+        name="confirmPassword"
+        value={formData.confirmPassword}
+        onChange={handleInputChange}
+        placeholder="Confirm password"
+      />
+      
+      <button type="submit" disabled={loading}>
+        Create User
+      </button>
+    </form>
+  );
+};
+```
+
+### Authentication Context
+
+The application uses React Context for authentication state management:
+
+```javascript
+import { useAuth } from '../context/AuthContext';
+
+const Component = () => {
+  const { token, user, login, logout } = useAuth();
+  
+  // Check if user is authenticated
+  if (!token) {
+    return <div>You must log in to view this page</div>;
+  }
+  
+  return (
+    <div>
+      <p>Welcome, {user?.username}!</p>
+      <button onClick={logout}>Logout</button>
+    </div>
+  );
+};
+```
+
+## User Assignment to Tasks
+
+Users can be assigned to tasks through the Task Manager:
+
+```javascript
+// Load users for assignment dropdown
+const loadUsers = async () => {
+  const response = await apiRequest('/tasks/users');
+  if (response.success) {
+    setUsers(response.data || []);
+  }
+};
+
+// Assign user to task
+const createTask = async (taskData) => {
+  await apiRequest('/tasks', {
+    method: 'POST',
+    body: JSON.stringify({
+      title: 'Task title',
+      asignedId: 3, // User ID
+      // ... other fields
+    })
+  });
+};
+```
+
+See the [Task Management](/features/tasks) documentation for complete task assignment details.
+
+## Security Considerations
+
+<Tabs>
+  <Tab title="Password Security">
+    - Passwords must be at least 8 characters long
+    - Passwords are hashed before storage (never stored in plain text)
+    - Password fields are never returned in API responses
+    - Use strong, unique passwords for each account
+  </Tab>
+  
+  <Tab title="Token Security">
+    - JWT tokens are used for authentication
+    - Tokens are issued on login and must be included in all API requests
+    - Store tokens securely (e.g., in localStorage or httpOnly cookies)
+    - Implement token refresh for long-lived sessions
+  </Tab>
+  
+  <Tab title="Authorization">
+    - All endpoints (except `/api/auth/login`) require authentication
+    - The `[Authorize]` attribute on controllers enforces authentication
+    - User ID is extracted from JWT claims using `ClaimTypes.NameIdentifier`
+  </Tab>
+</Tabs>
+
+## Best Practices
+
+1. **Username Convention**: Use consistent naming conventions (e.g., lowercase with underscores)
+2. **Password Requirements**: Enforce minimum 8 characters (consider adding complexity requirements)
+3. **Account Lifecycle**: Set `active` to false instead of deleting users to maintain audit trails
+4. **Error Handling**: Provide clear feedback for authentication errors without revealing security details

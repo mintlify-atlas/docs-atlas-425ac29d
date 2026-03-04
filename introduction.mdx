@@ -1,0 +1,129 @@
+---
+title: Introduction
+description: Learn about the Legacy Migration Task Manager - a school project demonstrating the migration from monolithic to modern MVC architecture
+---
+
+## What is the Legacy Migration Task Manager?
+
+The Legacy Migration Task Manager is a comprehensive school project that showcases the practical transformation of a legacy task management system from a tightly-coupled monolithic architecture to a modern, maintainable MVC (Model-View-Controller) architecture.
+
+This project demonstrates real-world architectural patterns and best practices for separating concerns, improving code organization, and building scalable web applications with a clear separation between backend API and frontend interface.
+
+<Note>
+This is an educational project designed to demonstrate architectural migration concepts and modern web development practices.
+</Note>
+
+## Key features
+
+The task manager provides a full suite of project management capabilities:
+
+<CardGroup cols={2}>
+  <Card title="Task management" icon="list-check">
+    Create, update, and track tasks with priorities, states, and deadlines
+  </Card>
+  <Card title="Project organization" icon="folder">
+    Organize tasks into projects with team assignments
+  </Card>
+  <Card title="User authentication" icon="lock">
+    Secure JWT-based authentication and authorization
+  </Card>
+  <Card title="Activity history" icon="clock">
+    Track all changes and modifications with comprehensive audit logs
+  </Card>
+  <Card title="Notifications" icon="bell">
+    Stay informed with real-time notification system
+  </Card>
+  <Card title="Reports & analytics" icon="chart-bar">
+    Generate insights with task statistics and reports
+  </Card>
+</CardGroup>
+
+## Why this project exists
+
+The primary goal of this project is educational:
+
+1. **Demonstrate architectural migration**: Show how to transform a monolithic application into a modern MVC architecture
+2. **Apply separation of concerns**: Implement clear boundaries between presentation, business logic, and data layers
+3. **Practice modern development**: Use contemporary tools and frameworks (.NET 10, React, PostgreSQL)
+4. **Improve maintainability**: Create a codebase that's easier to test, modify, and scale
+
+<Info>
+The project evolved from a single, tightly-coupled codebase to a clean separation between:
+- Backend API (C# .NET 10)
+- Frontend interface (React.js)
+- Database layer (PostgreSQL)
+</Info>
+
+## Technology stack
+
+### Backend
+
+- **C# with .NET 10**: Modern framework providing robust API capabilities with native OpenAPI support
+- **Entity Framework Core**: ORM for database operations with code-first approach
+- **JWT authentication**: Secure token-based authentication system
+- **PostgreSQL**: Reliable relational database for data persistence
+
+### Frontend
+
+- **React.js 19**: Component-based UI library for building interactive interfaces
+- **React Router**: Client-side routing for seamless navigation
+- **Tailwind CSS 4**: Utility-first CSS framework for rapid UI development
+- **Lucide React**: Beautiful icon library
+- **Webpack**: Module bundler for optimized production builds
+
+### Development & deployment
+
+- **Railway**: Cloud platform for deployment and hosting
+- **Git**: Version control and collaboration
+
+## Architecture highlights
+
+The application follows the MVC pattern with additional service layer:
+
+```
+┌─────────────────┐
+│   React View    │  ← User Interface (Components)
+└────────┬────────┘
+         │
+         ↓
+┌─────────────────┐
+│  Controllers    │  ← HTTP Request Handlers
+└────────┬────────┘
+         │
+         ↓
+┌─────────────────┐
+│    Services     │  ← Business Logic Layer
+└────────┬────────┘
+         │
+         ↓
+┌─────────────────┐
+│  Models/DTOs    │  ← Data Layer
+└────────┬────────┘
+         │
+         ↓
+┌─────────────────┐
+│   PostgreSQL    │  ← Data Persistence
+└─────────────────┘
+```
+
+This separation enables:
+
+- **Independent development**: Frontend and backend teams can work in parallel
+- **Easy testing**: Each layer can be tested in isolation
+- **Scalability**: Components can be scaled independently based on load
+- **Maintainability**: Changes in one layer don't cascade to others
+
+## What you'll learn
+
+Throughout this documentation, you'll discover:
+
+- How to set up and run the complete system
+- The architectural decisions behind the MVC pattern
+- How JWT authentication secures the API
+- How Entity Framework manages database operations
+- How React components communicate with the backend
+- Best practices for API design and error handling
+
+<Card title="Ready to get started?" icon="rocket" href="/quickstart">
+  Follow our quickstart guide to get the system running in minutes
+</Card>

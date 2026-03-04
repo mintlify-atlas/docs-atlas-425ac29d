@@ -1,0 +1,217 @@
+---
+title: 'Users'
+description: 'User management endpoints for retrieving user information'
+---
+
+<Note>
+  The Users API currently provides read-only access. User creation and authentication are handled through the [Authentication](/api/authentication) endpoints.
+</Note>
+
+## Get All Users
+
+<Card title="GET /api/Users" icon="users">
+  Retrieve all users in the system
+</Card>
+
+### Headers
+
+<ParamField header="Authorization" type="string">
+  Bearer token for authentication (optional - endpoint is not explicitly protected)
+</ParamField>
+
+### Response
+
+<ResponseField name="Success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="Message" type="string">
+  Response message
+</ResponseField>
+
+<ResponseField name="Data" type="array">
+  Array of user objects
+  <Expandable title="User object">
+    <ResponseField name="Id" type="integer">
+      User ID
+    </ResponseField>
+    <ResponseField name="Username" type="string">
+      Username for authentication
+    </ResponseField>
+    <ResponseField name="Password" type="string">
+      User password (hashed or plain text)
+    </ResponseField>
+    <ResponseField name="CreationDate" type="string">
+      User creation date (ISO 8601 format)
+    </ResponseField>
+    <ResponseField name="Active" type="boolean">
+      Whether the user account is active
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example Request
+
+```bash
+curl -X GET https://api.example.com/api/Users
+```
+
+### Example Response
+
+<CodeGroup>
+```json 200 OK
+{
+  "Success": true,
+  "Message": "Users retrieved successfully.",
+  "Data": [
+    {
+      "Id": 1,
+      "Username": "john_doe",
+      "Password": "hashed_password_here",
+      "CreationDate": "2026-01-01T10:00:00Z",
+      "Active": true
+    },
+    {
+      "Id": 2,
+      "Username": "jane_smith",
+      "Password": "hashed_password_here",
+      "CreationDate": "2026-01-15T14:30:00Z",
+      "Active": true
+    },
+    {
+      "Id": 3,
+      "Username": "bob_johnson",
+      "Password": "hashed_password_here",
+      "CreationDate": "2026-02-01T09:15:00Z",
+      "Active": false
+    }
+  ]
+}
+```
+
+```json 500 Internal Server Error
+{
+  "Success": false,
+  "Message": "Error retrieving users: Database connection failed",
+  "Data": null
+}
+```
+</CodeGroup>
+
+### Status Codes
+
+- `200 OK` - Users successfully retrieved
+- `500 Internal Server Error` - Server error occurred while retrieving users
+
+---
+
+## Response Format
+
+The Users API follows a consistent response format:
+
+<ResponseField name="Success" type="boolean">
+  Indicates whether the operation was successful
+</ResponseField>
+
+<ResponseField name="Message" type="string">
+  Human-readable message describing the result
+</ResponseField>
+
+<ResponseField name="Data" type="array | null">
+  The response payload (array of users or null on error)
+</ResponseField>
+
+---
+
+## Error Handling
+
+### 500 Internal Server Error
+
+```json
+{
+  "Success": false,
+  "Message": "Error message details",
+  "Data": null
+}
+```
+
+This error occurs when:
+- Database connection fails
+- An unexpected exception occurs during user retrieval
+- The user service encounters an internal error
+
+---
+
+## Related Endpoints
+
+For user-related operations, see also:
+
+- [Authentication API](/api/authentication) - Login and JWT token generation
+- [Tasks API - Get Users](/api/tasks#get-active-users) - Get active users for task assignment
+- [Notifications API](/api/notifications) - Get notifications for specific users
+
+---
+
+## Security Notes
+
+<Warning>
+  **Important Security Considerations:**
+  
+  - This endpoint currently returns password fields in the response. In production, passwords should NEVER be exposed via API endpoints.
+  - Consider implementing password hashing (e.g., bcrypt, Argon2) before storing passwords.
+  - Add proper authorization to restrict access to user data.
+  - Filter sensitive fields from the response or create a separate DTO that excludes passwords.
+  - Implement role-based access control (RBAC) to limit who can view user information.
+</Warning>
+
+<Tip>
+  **Best Practices:**
+  
+  - Use the `Active` field to filter out inactive users in your application
+  - Cache user data when possible to reduce database queries
+  - Implement pagination for large user lists
+  - Add search and filtering capabilities for better user management
+</Tip>
+
+---
+
+## Usage Examples
+
+### Filter Active Users
+
+```javascript
+// JavaScript example - filter active users from response
+const response = await fetch('https://api.example.com/api/Users');
+const data = await response.json();
+
+if (data.Success) {
+  const activeUsers = data.Data.filter(user => user.Active === true);
+  console.log('Active users:', activeUsers);
+}
+```
+
+### Get User by Username
+
+```javascript
+// JavaScript example - find user by username
+const response = await fetch('https://api.example.com/api/Users');
+const data = await response.json();
+
+if (data.Success) {
+  const user = data.Data.find(u => u.Username === 'john_doe');
+  console.log('User found:', user);
+}
+```
+
+---
+
+## Future Endpoints
+
+The following user management endpoints are not currently implemented but may be added in future versions:
+
+- `POST /api/Users` - Create a new user
+- `GET /api/Users/{id}` - Get user by ID
+- `PUT /api/Users/{id}` - Update user information
+- `DELETE /api/Users/{id}` - Delete/deactivate a user
+- `PUT /api/Users/{id}/password` - Change user password
+- `GET /api/Users/{id}/permissions` - Get user permissions and roles
