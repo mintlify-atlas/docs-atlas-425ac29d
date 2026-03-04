@@ -1,0 +1,114 @@
+{
+  "projectType": "saas",
+  "projectName": "Legacy Migration Task Manager",
+  "projectDescription": "A modern task management system built with .NET 10 and React, demonstrating migration from monolithic to MVC architecture.",
+  "theme": "mint",
+  "primaryColor": "#3b82f6",
+  "lightColor": "#60a5fa",
+  "darkColor": "#1e40af",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "architecture"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/tasks",
+              "features/projects",
+              "features/users",
+              "features/comments",
+              "features/notifications"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "advanced/reports",
+              "advanced/search",
+              "advanced/history"
+            ]
+          },
+          {
+            "group": "Deployment",
+            "pages": [
+              "deployment/setup",
+              "deployment/configuration",
+              "deployment/docker"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "api/authentication"
+            ]
+          },
+          {
+            "group": "Endpoints",
+            "pages": [
+              "api/tasks",
+              "api/projects",
+              "api/users",
+              "api/comments",
+              "api/history",
+              "api/notifications"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Task Management with priorities and states",
+    "Project organization and tracking",
+    "User management with role-based access",
+    "Comment system for task collaboration",
+    "Activity history and audit trail",
+    "Real-time notifications",
+    "Advanced reporting and analytics",
+    "JWT authentication and authorization",
+    "PostgreSQL database with Entity Framework",
+    "React-based modern UI with Tailwind CSS"
+  ],
+  "publicApiSurface": [
+    "POST /api/auth/login",
+    "GET /api/tasks",
+    "POST /api/tasks",
+    "PUT /api/tasks",
+    "DELETE /api/tasks/{id}",
+    "GET /api/tasks/statistics",
+    "GET /api/tasks/report/by-state",
+    "GET /api/tasks/report/by-project",
+    "GET /api/tasks/report/by-user",
+    "GET /api/projects",
+    "POST /api/projects",
+    "PUT /api/projects",
+    "DELETE /api/projects/{id}",
+    "GET /api/users",
+    "POST /api/users",
+    "PUT /api/users",
+    "DELETE /api/users/{id}",
+    "GET /api/comments",
+    "POST /api/comments",
+    "PUT /api/comments",
+    "DELETE /api/comments/{id}",
+    "GET /api/history",
+    "POST /api/history",
+    "GET /api/notifications",
+    "POST /api/notifications",
+    "PUT /api/notifications/mark-read/{id}"
+  ]
+}
