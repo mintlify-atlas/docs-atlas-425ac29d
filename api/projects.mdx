@@ -62,7 +62,7 @@ description: 'Project management endpoints for creating, updating, and organizin
 ### Example Request
 
 ```bash
-curl -X GET https://api.example.com/api/Projects \
+curl -X GET https://localhost:7067/api/Projects \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -101,7 +101,7 @@ curl -X GET https://api.example.com/api/Projects \
 
 ## Get Project By ID
 
-<Card title="GET /api/Projects/{id}" icon="folder">
+<Card title="GET /api/projects/{id}" icon="folder">
   Retrieve a specific project by ID
 </Card>
 
@@ -120,7 +120,7 @@ curl -X GET https://api.example.com/api/Projects \
 ### Example Request
 
 ```bash
-curl -X GET https://api.example.com/api/Projects/1 \
+curl -X GET https://localhost:7067/api/projects/1 \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -180,7 +180,7 @@ curl -X GET https://api.example.com/api/Projects/1 \
 ### Example Request
 
 ```bash
-curl -X POST https://api.example.com/api/Projects \
+curl -X POST https://localhost:7067/api/Projects \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -259,7 +259,7 @@ curl -X POST https://api.example.com/api/Projects \
 ### Example Request
 
 ```bash
-curl -X PUT https://api.example.com/api/Projects \
+curl -X PUT https://localhost:7067/api/Projects \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -312,7 +312,7 @@ curl -X PUT https://api.example.com/api/Projects \
 
 ## Delete Project
 
-<Card title="DELETE /api/Projects/{id}" icon="trash">
+<Card title="DELETE /api/projects/{id}" icon="trash">
   Delete a project (soft delete - marks as inactive)
 </Card>
 
@@ -331,7 +331,7 @@ curl -X PUT https://api.example.com/api/Projects \
 ### Example Request
 
 ```bash
-curl -X DELETE https://api.example.com/api/Projects/1 \
+curl -X DELETE https://localhost:7067/api/projects/1 \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 

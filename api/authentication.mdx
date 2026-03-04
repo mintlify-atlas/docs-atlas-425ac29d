@@ -9,7 +9,7 @@ The Legacy Migration Task Manager uses JWT (JSON Web Token) authentication. Afte
 
 ## Login
 
-<Card title="POST /api/Auth/login" icon="right-to-bracket">
+<Card title="POST /api/auth/login" icon="right-to-bracket">
   Authenticate a user and receive a JWT token
 </Card>
 
@@ -44,7 +44,7 @@ The Legacy Migration Task Manager uses JWT (JSON Web Token) authentication. Afte
 ### Example Request
 
 ```bash
-curl -X POST https://api.example.com/api/Auth/login \
+curl -X POST https://localhost:7067/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "Username": "john_doe",
@@ -113,13 +113,13 @@ The JWT token contains the following claims:
 Include the JWT token in the `Authorization` header with the `Bearer` scheme:
 
 ```bash
-curl -X GET https://api.example.com/api/Tasks \
+curl -X GET https://localhost:7067/api/Tasks \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
 ### Protected Endpoints
 
-All endpoints except `/api/Auth/login` require authentication. If the token is missing, invalid, or expired, you'll receive a `401 Unauthorized` response.
+All endpoints except `/api/auth/login` require authentication. If the token is missing, invalid, or expired, you'll receive a `401 Unauthorized` response.
 
 ### Token Expiration
 

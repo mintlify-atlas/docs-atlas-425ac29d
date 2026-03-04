@@ -43,7 +43,7 @@ Returns all active history records associated with a task, ordered by most recen
 
 <CodeGroup>
 ```bash cURL
-curl -X GET http://localhost:5000/api/history/task/123 \
+curl -X GET https://localhost:7067/api/history/task/123 \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -155,7 +155,7 @@ Returns all active history records across all tasks, ordered by most recent firs
 
 <CodeGroup>
 ```bash cURL
-curl -X GET http://localhost:5000/api/history/all \
+curl -X GET https://localhost:7067/api/history/all \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -202,7 +202,7 @@ Creates a new history record for a task.
 
 <CodeGroup>
 ```bash cURL
-curl -X POST http://localhost:5000/api/history \
+curl -X POST https://localhost:7067/api/history \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -271,7 +271,7 @@ Marks a history record as inactive without actually deleting it from the databas
 
 <CodeGroup>
 ```bash cURL
-curl -X DELETE http://localhost:5000/api/history/457 \
+curl -X DELETE https://localhost:7067/api/history/457 \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 

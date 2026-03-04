@@ -18,7 +18,7 @@ Returns aggregated statistics for all active tasks in the system.
 
 <CodeGroup>
 ```bash cURL
-curl -X GET http://localhost:5000/api/tasks/statistics \
+curl -X GET https://localhost:7067/api/tasks/statistics \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -117,7 +117,7 @@ Groups tasks by their current state and returns the count for each state.
 
 <CodeGroup>
 ```bash cURL
-curl -X GET http://localhost:5000/api/tasks/report/by-state \
+curl -X GET https://localhost:7067/api/tasks/report/by-state \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -171,7 +171,7 @@ Groups tasks by their assigned project and returns the count for each project.
 
 <CodeGroup>
 ```bash cURL
-curl -X GET http://localhost:5000/api/tasks/report/by-project \
+curl -X GET https://localhost:7067/api/tasks/report/by-project \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -221,7 +221,7 @@ Groups tasks by their assigned user and returns the count for each user.
 
 <CodeGroup>
 ```bash cURL
-curl -X GET http://localhost:5000/api/tasks/report/by-user \
+curl -X GET https://localhost:7067/api/tasks/report/by-user \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 

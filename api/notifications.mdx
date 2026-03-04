@@ -9,7 +9,7 @@ description: 'Notification management endpoints for user alerts and task updates
 
 ## Get Notifications By User ID
 
-<Card title="GET /api/Notifications/user/{userId}" icon="bell">
+<Card title="GET /api/notifications/user/{userId}" icon="bell">
   Retrieve all notifications for a specific user
 </Card>
 
@@ -80,7 +80,7 @@ description: 'Notification management endpoints for user alerts and task updates
 ### Example Request
 
 ```bash
-curl -X GET https://api.example.com/api/Notifications/user/5 \
+curl -X GET https://localhost:7067/api/notifications/user/5 \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -137,7 +137,7 @@ curl -X GET https://api.example.com/api/Notifications/user/5 \
 
 ## Get Unread Notification Count
 
-<Card title="GET /api/Notifications/user/{userId}/unread-count" icon="bell-on">
+<Card title="GET /api/notifications/user/{userId}/unread-count" icon="bell-on">
   Get the count of unread notifications for a specific user
 </Card>
 
@@ -170,7 +170,7 @@ curl -X GET https://api.example.com/api/Notifications/user/5 \
 ### Example Request
 
 ```bash
-curl -X GET https://api.example.com/api/Notifications/user/5/unread-count \
+curl -X GET https://localhost:7067/api/notifications/user/5/unread-count \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -223,7 +223,7 @@ curl -X GET https://api.example.com/api/Notifications/user/5/unread-count \
 ### Example Request
 
 ```bash
-curl -X POST https://api.example.com/api/Notifications \
+curl -X POST https://localhost:7067/api/Notifications \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -278,7 +278,7 @@ curl -X POST https://api.example.com/api/Notifications \
 
 ## Mark All Notifications As Read
 
-<Card title="PUT /api/Notifications/mark-all-read/{userId}" icon="check-double">
+<Card title="PUT /api/notifications/mark-all-read/{userId}" icon="check-double">
   Mark all notifications as read for a specific user
 </Card>
 
@@ -297,7 +297,7 @@ curl -X POST https://api.example.com/api/Notifications \
 ### Example Request
 
 ```bash
-curl -X PUT https://api.example.com/api/Notifications/mark-all-read/5 \
+curl -X PUT https://localhost:7067/api/notifications/mark-all-read/5 \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -325,7 +325,7 @@ curl -X PUT https://api.example.com/api/Notifications/mark-all-read/5 \
 
 ## Mark Single Notification As Read
 
-<Card title="PUT /api/Notifications/mark-read/{notificationId}" icon="check">
+<Card title="PUT /api/notifications/mark-read/{notificationId}" icon="check">
   Mark a specific notification as read
 </Card>
 
@@ -344,7 +344,7 @@ curl -X PUT https://api.example.com/api/Notifications/mark-all-read/5 \
 ### Example Request
 
 ```bash
-curl -X PUT https://api.example.com/api/Notifications/mark-read/1 \
+curl -X PUT https://localhost:7067/api/notifications/mark-read/1 \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -441,7 +441,7 @@ All notification endpoints follow a consistent response format:
 ```javascript
 const loadNotifications = async (userId, token) => {
   const response = await fetch(
-    `https://api.example.com/api/Notifications/user/${userId}`,
+    `https://localhost:7067/api/notifications/user/${userId}`,
     {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -468,7 +468,7 @@ const loadNotifications = async (userId, token) => {
 ```javascript
 const getUnreadCount = async (userId, token) => {
   const response = await fetch(
-    `https://api.example.com/api/Notifications/user/${userId}/unread-count`,
+    `https://localhost:7067/api/notifications/user/${userId}/unread-count`,
     {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -490,7 +490,7 @@ document.getElementById('notification-badge').textContent = count;
 ```javascript
 const markAsRead = async (notificationId, token) => {
   const response = await fetch(
-    `https://api.example.com/api/Notifications/mark-read/${notificationId}`,
+    `https://localhost:7067/api/notifications/mark-read/${notificationId}`,
     {
       method: 'PUT',
       headers: {
@@ -513,7 +513,7 @@ notificationElement.addEventListener('click', async () => {
 
 ```javascript
 const sendNotification = async (userId, taskId, title, message, type, token) => {
-  const response = await fetch('https://api.example.com/api/Notifications', {
+  const response = await fetch('https://localhost:7067/api/Notifications', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,

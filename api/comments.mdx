@@ -9,7 +9,7 @@ description: 'Comment management endpoints for adding and retrieving task commen
 
 ## Get Comments By Task ID
 
-<Card title="GET /api/Comments/task/{taskId}" icon="comments">
+<Card title="GET /api/comments/task/{taskId}" icon="comments">
   Retrieve all comments for a specific task
 </Card>
 
@@ -74,7 +74,7 @@ description: 'Comment management endpoints for adding and retrieving task commen
 ### Example Request
 
 ```bash
-curl -X GET https://api.example.com/api/Comments/task/1 \
+curl -X GET https://localhost:7067/api/comments/task/1 \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -127,7 +127,7 @@ curl -X GET https://api.example.com/api/Comments/task/1 \
 
 ## Get All Comments
 
-<Card title="GET /api/Comments/all" icon="message">
+<Card title="GET /api/comments/all" icon="message">
   Retrieve all comments in the system
 </Card>
 
@@ -154,7 +154,7 @@ curl -X GET https://api.example.com/api/Comments/task/1 \
 ### Example Request
 
 ```bash
-curl -X GET https://api.example.com/api/Comments/all \
+curl -X GET https://localhost:7067/api/comments/all \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -220,7 +220,7 @@ curl -X GET https://api.example.com/api/Comments/all \
 ### Example Request
 
 ```bash
-curl -X POST https://api.example.com/api/Comments \
+curl -X POST https://localhost:7067/api/Comments \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -333,8 +333,8 @@ All comment endpoints follow a consistent response format:
   
   - Comments are automatically associated with the authenticated user via JWT token
   - The `UserCreate` field is automatically populated from the token's NameIdentifier claim
-  - Use `/api/Comments/task/{taskId}` to load comments when displaying task details
-  - Use `/api/Comments/all` for admin dashboards or comment moderation interfaces
+  - Use `/api/comments/task/{taskId}` to load comments when displaying task details
+  - Use `/api/comments/all` for admin dashboards or comment moderation interfaces
 </Tip>
 
 <Warning>
@@ -353,7 +353,7 @@ All comment endpoints follow a consistent response format:
 
 ```javascript
 const addComment = async (taskId, commentText, token) => {
-  const response = await fetch('https://api.example.com/api/Comments', {
+  const response = await fetch('https://localhost:7067/api/Comments', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -382,7 +382,7 @@ const addComment = async (taskId, commentText, token) => {
 ```javascript
 const loadComments = async (taskId, token) => {
   const response = await fetch(
-    `https://api.example.com/api/Comments/task/${taskId}`,
+    `https://localhost:7067/api/comments/task/${taskId}`,
     {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -406,7 +406,7 @@ const loadComments = async (taskId, token) => {
 
 The following comment management endpoints are not currently implemented but may be added in future versions:
 
-- `PUT /api/Comments/{id}` - Update an existing comment
-- `DELETE /api/Comments/{id}` - Delete a comment
-- `GET /api/Comments/user/{userId}` - Get all comments by a specific user
-- `GET /api/Comments/search` - Search comments by text content
+- `PUT /api/comments/{id}` - Update an existing comment
+- `DELETE /api/comments/{id}` - Delete a comment
+- `GET /api/comments/user/{userId}` - Get all comments by a specific user
+- `GET /api/comments/search` - Search comments by text content

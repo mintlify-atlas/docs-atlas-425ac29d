@@ -9,7 +9,7 @@ description: 'History tracking endpoints for auditing task changes and activitie
 
 ## Get History By Task ID
 
-<Card title="GET /api/History/task/{taskId}" icon="clock-rotate-left">
+<Card title="GET /api/history/task/{taskId}" icon="clock-rotate-left">
   Retrieve the complete history of changes for a specific task
 </Card>
 
@@ -58,7 +58,7 @@ description: 'History tracking endpoints for auditing task changes and activitie
 ### Example Request
 
 ```bash
-curl -X GET https://api.example.com/api/History/task/1 \
+curl -X GET https://localhost:7067/api/history/task/1 \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -109,7 +109,7 @@ curl -X GET https://api.example.com/api/History/task/1 \
 
 ## Get All History
 
-<Card title="GET /api/History/all" icon="list-timeline">
+<Card title="GET /api/history/all" icon="list-timeline">
   Retrieve the complete history of all task changes in the system
 </Card>
 
@@ -132,7 +132,7 @@ curl -X GET https://api.example.com/api/History/task/1 \
 ### Example Request
 
 ```bash
-curl -X GET https://api.example.com/api/History/all \
+curl -X GET https://localhost:7067/api/history/all \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -201,7 +201,7 @@ curl -X GET https://api.example.com/api/History/all \
 ### Example Request
 
 ```bash
-curl -X POST https://api.example.com/api/History \
+curl -X POST https://localhost:7067/api/History \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -245,7 +245,7 @@ curl -X POST https://api.example.com/api/History \
 
 ## Delete History Record
 
-<Card title="DELETE /api/History/{historyId}" icon="trash">
+<Card title="DELETE /api/history/{historyId}" icon="trash">
   Delete a history record (soft delete - marks as inactive)
 </Card>
 
@@ -264,7 +264,7 @@ curl -X POST https://api.example.com/api/History \
 ### Example Request
 
 ```bash
-curl -X DELETE https://api.example.com/api/History/1 \
+curl -X DELETE https://localhost:7067/api/history/1 \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -411,7 +411,7 @@ History records typically track the following actions:
 ```javascript
 const getTaskHistory = async (taskId, token) => {
   const response = await fetch(
-    `https://api.example.com/api/History/task/${taskId}`,
+    `https://localhost:7067/api/history/task/${taskId}`,
     {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -435,7 +435,7 @@ const getTaskHistory = async (taskId, token) => {
 
 ```javascript
 const logTaskAction = async (taskId, action, description, token) => {
-  const response = await fetch('https://api.example.com/api/History', {
+  const response = await fetch('https://localhost:7067/api/History', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,

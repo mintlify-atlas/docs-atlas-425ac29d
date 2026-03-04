@@ -53,7 +53,7 @@ description: 'User management endpoints for retrieving user information'
 ### Example Request
 
 ```bash
-curl -X GET https://api.example.com/api/Users
+curl -X GET https://localhost:7067/api/Users
 ```
 
 ### Example Response
@@ -181,7 +181,7 @@ For user-related operations, see also:
 
 ```javascript
 // JavaScript example - filter active users from response
-const response = await fetch('https://api.example.com/api/Users');
+const response = await fetch('https://localhost:7067/api/Users');
 const data = await response.json();
 
 if (data.Success) {
@@ -194,7 +194,7 @@ if (data.Success) {
 
 ```javascript
 // JavaScript example - find user by username
-const response = await fetch('https://api.example.com/api/Users');
+const response = await fetch('https://localhost:7067/api/Users');
 const data = await response.json();
 
 if (data.Success) {
@@ -210,8 +210,8 @@ if (data.Success) {
 The following user management endpoints are not currently implemented but may be added in future versions:
 
 - `POST /api/Users` - Create a new user
-- `GET /api/Users/{id}` - Get user by ID
-- `PUT /api/Users/{id}` - Update user information
-- `DELETE /api/Users/{id}` - Delete/deactivate a user
-- `PUT /api/Users/{id}/password` - Change user password
-- `GET /api/Users/{id}/permissions` - Get user permissions and roles
+- `GET /api/users/{id}` - Get user by ID
+- `PUT /api/users/{id}` - Update user information
+- `DELETE /api/users/{id}` - Delete/deactivate a user
+- `PUT /api/users/{id}/password` - Change user password
+- `GET /api/users/{id}/permissions` - Get user permissions and roles

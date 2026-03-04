@@ -92,7 +92,7 @@ description: 'Task management endpoints for creating, updating, and tracking tas
 ### Example Request
 
 ```bash
-curl -X GET https://api.example.com/api/Tasks \
+curl -X GET https://localhost:7067/api/Tasks \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -131,7 +131,7 @@ curl -X GET https://api.example.com/api/Tasks \
 
 ## Get Task By ID
 
-<Card title="GET /api/Tasks/{id}" icon="file">
+<Card title="GET /api/tasks/{id}" icon="file">
   Retrieve a specific task by ID
 </Card>
 
@@ -144,7 +144,7 @@ curl -X GET https://api.example.com/api/Tasks \
 ### Example Request
 
 ```bash
-curl -X GET https://api.example.com/api/Tasks/1 \
+curl -X GET https://localhost:7067/api/tasks/1 \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -232,7 +232,7 @@ curl -X GET https://api.example.com/api/Tasks/1 \
 ### Example Request
 
 ```bash
-curl -X POST https://api.example.com/api/Tasks \
+curl -X POST https://localhost:7067/api/Tasks \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -337,7 +337,7 @@ curl -X POST https://api.example.com/api/Tasks \
 ### Example Request
 
 ```bash
-curl -X PUT https://api.example.com/api/Tasks \
+curl -X PUT https://localhost:7067/api/Tasks \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -386,7 +386,7 @@ curl -X PUT https://api.example.com/api/Tasks \
 
 ## Delete Task
 
-<Card title="DELETE /api/Tasks/{id}" icon="trash">
+<Card title="DELETE /api/tasks/{id}" icon="trash">
   Delete a task (soft delete - marks as inactive)
 </Card>
 
@@ -399,7 +399,7 @@ curl -X PUT https://api.example.com/api/Tasks \
 ### Example Request
 
 ```bash
-curl -X DELETE https://api.example.com/api/Tasks/1 \
+curl -X DELETE https://localhost:7067/api/tasks/1 \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -427,7 +427,7 @@ curl -X DELETE https://api.example.com/api/Tasks/1 \
 
 ## Get Task Statistics
 
-<Card title="GET /api/Tasks/statistics" icon="chart-simple">
+<Card title="GET /api/tasks/statistics" icon="chart-simple">
   Retrieve task statistics and metrics
 </Card>
 
@@ -465,7 +465,7 @@ curl -X DELETE https://api.example.com/api/Tasks/1 \
 ### Example Request
 
 ```bash
-curl -X GET https://api.example.com/api/Tasks/statistics \
+curl -X GET https://localhost:7067/api/tasks/statistics \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -489,14 +489,14 @@ curl -X GET https://api.example.com/api/Tasks/statistics \
 
 ## Get Active Users
 
-<Card title="GET /api/Tasks/users" icon="users">
+<Card title="GET /api/tasks/users" icon="users">
   Retrieve all active users (helper endpoint for task assignment)
 </Card>
 
 ### Example Request
 
 ```bash
-curl -X GET https://api.example.com/api/Tasks/users \
+curl -X GET https://localhost:7067/api/tasks/users \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -518,14 +518,14 @@ curl -X GET https://api.example.com/api/Tasks/users \
 
 ## Get Active Projects
 
-<Card title="GET /api/Tasks/projects" icon="folder">
+<Card title="GET /api/tasks/projects" icon="folder">
   Retrieve all active projects (helper endpoint for task creation)
 </Card>
 
 ### Example Request
 
 ```bash
-curl -X GET https://api.example.com/api/Tasks/projects \
+curl -X GET https://localhost:7067/api/tasks/projects \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -547,14 +547,14 @@ curl -X GET https://api.example.com/api/Tasks/projects \
 
 ## Get Task States
 
-<Card title="GET /api/Tasks/states" icon="list-check">
+<Card title="GET /api/tasks/states" icon="list-check">
   Retrieve all active task states
 </Card>
 
 ### Example Request
 
 ```bash
-curl -X GET https://api.example.com/api/Tasks/states \
+curl -X GET https://localhost:7067/api/tasks/states \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -577,14 +577,14 @@ curl -X GET https://api.example.com/api/Tasks/states \
 
 ## Get Task Priorities
 
-<Card title="GET /api/Tasks/priorities" icon="flag">
+<Card title="GET /api/tasks/priorities" icon="flag">
   Retrieve all active task priorities
 </Card>
 
 ### Example Request
 
 ```bash
-curl -X GET https://api.example.com/api/Tasks/priorities \
+curl -X GET https://localhost:7067/api/tasks/priorities \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -607,14 +607,14 @@ curl -X GET https://api.example.com/api/Tasks/priorities \
 
 ## Get Tasks By State Report
 
-<Card title="GET /api/Tasks/report/by-state" icon="chart-pie">
+<Card title="GET /api/tasks/report/by-state" icon="chart-pie">
   Retrieve task distribution grouped by state
 </Card>
 
 ### Example Request
 
 ```bash
-curl -X GET https://api.example.com/api/Tasks/report/by-state \
+curl -X GET https://localhost:7067/api/tasks/report/by-state \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -637,14 +637,14 @@ curl -X GET https://api.example.com/api/Tasks/report/by-state \
 
 ## Get Tasks By Project Report
 
-<Card title="GET /api/Tasks/report/by-project" icon="chart-column">
+<Card title="GET /api/tasks/report/by-project" icon="chart-column">
   Retrieve task distribution grouped by project
 </Card>
 
 ### Example Request
 
 ```bash
-curl -X GET https://api.example.com/api/Tasks/report/by-project \
+curl -X GET https://localhost:7067/api/tasks/report/by-project \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -666,14 +666,14 @@ curl -X GET https://api.example.com/api/Tasks/report/by-project \
 
 ## Get Tasks By User Report
 
-<Card title="GET /api/Tasks/report/by-user" icon="user-chart">
+<Card title="GET /api/tasks/report/by-user" icon="user-chart">
   Retrieve task distribution grouped by assigned user
 </Card>
 
 ### Example Request
 
 ```bash
-curl -X GET https://api.example.com/api/Tasks/report/by-user \
+curl -X GET https://localhost:7067/api/tasks/report/by-user \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
